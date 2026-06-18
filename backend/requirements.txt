@@ -1,0 +1,23 @@
+# ספריות Python שהפרויקט צריך — מתקינים הכל עם: pip install -r requirements.txt
+# עודכן לגרסאות האחרונות — 2026-05-24
+
+# חיפוש אינטרנט בזמן אמת
+tavily-python==0.7.25
+
+# תקשורת עם Claude API של Anthropic
+# גרסה 0.105.2 נדרשת לתמיכה במודל claude-sonnet-4-20250514
+anthropic==0.105.2
+
+# טעינת משתני סביבה מקובץ .env
+python-dotenv==1.2.2
+
+# שרת ה-API (ישמש בשלב 6)
+fastapi==0.136.3
+uvicorn==0.48.0
+
+# תור משימות לריצת agents במקביל (ישמש בשלב 6)
+celery==5.6.3
+redis==8.0.0
+
+# חיבור למסד הנתונים Supabase (ישמש בשלב 8)
+supabase==2.30.1

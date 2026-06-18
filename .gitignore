@@ -1,0 +1,18 @@
+# מפתחות — אף פעם לא מעלים לGitHub
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Playwright
+browser_profile/
