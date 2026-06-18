@@ -24,10 +24,11 @@ app = FastAPI(
 # בלי זה, הדפדפן יחסום כל בקשה מlocalhost:5173 ל-localhost:8000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",   # React dev server (Vite)
-        "http://localhost:3000",   # React dev server (CRA — גיבוי)
-    ],
+   allow_origins=[
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://interview-simulator-4mu5q95jt-tomer-interview-simulator.vercel.app",
+],
     allow_credentials=True,
     allow_methods=["*"],           # GET, POST, OPTIONS וכו'
     allow_headers=["*"],
