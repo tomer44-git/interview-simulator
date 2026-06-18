@@ -27,7 +27,8 @@ app.add_middleware(
    allow_origins=[
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://interview-simulator-4mu5q95jt-tomer-interview-simulator.vercel.app",
+    "https://interview-simulator-rose.vercel.app",
+    "https://interview-simulator-git-main-tomer-interview-simulator.vercel.app",
 ],
     allow_credentials=True,
     allow_methods=["*"],           # GET, POST, OPTIONS וכו'
