@@ -2,6 +2,8 @@
 # POST /interview/start — פותח ראיון ומחזיר משפט פתיחה + state ריק
 # POST /interview/turn  — מעבד תשובה ומחזיר תגובת מראיין + state מעודכן
 
+import time
+from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from models.schemas import (
     InterviewStartRequest, InterviewStartResponse,
@@ -9,6 +11,7 @@ from models.schemas import (
 )
 from agents import interview_agent
 from domains import domain_loader
+from latency import _record
 
 router = APIRouter()
 
@@ -50,12 +53,15 @@ def interview_turn(req: InterviewTurnRequest):
         domain_config = domain_loader.load(req.job_title)
 
         # ---- מעבד את תגובת המועמד ומחזיר תגובת מראיין ----
+        _t = time.perf_counter()
+        _ts = datetime.now().isoformat(timespec='milliseconds')
         result = interview_agent.next_turn(
             req.user_message,
             req.state,
             req.persona,
             domain_config,
         )
+        _record("stage/interview_turn", _ts, time.perf_counter() - _t)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Interview turn failed: {str(e)}")
 

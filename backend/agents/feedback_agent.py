@@ -4,6 +4,7 @@
 
 import os
 import json
+import time
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
@@ -52,11 +53,14 @@ Return a JSON object with EXACTLY this structure (no other text):
 INTERVIEW TRANSCRIPT:
 {transcript}"""
 
+    # [LATENCY] מודד את קריאת Claude — הקריאה הארוכה ביותר (max_tokens=1500)
+    _t = time.perf_counter()
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
         max_tokens=1500,
         messages=[{"role": "user", "content": prompt}]
     )
+    print(f"[LATENCY] claude/feedback_agent  {time.perf_counter()-_t:.3f}s")
 
     # ---- מפרסר את ה-JSON שחזר מClaude ----
     raw = response.content[0].text.strip()

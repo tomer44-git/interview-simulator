@@ -3,6 +3,8 @@
 # קלט: שם חברה + תפקיד | פלט: dict עם דרישות, תרבות, וסיגנלים
 
 import os
+import time
+from datetime import datetime
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
@@ -15,6 +17,10 @@ def run(company_name: str, job_title: str) -> dict:
     מחפש מידע LinkedIn דרך Tavily.
     LinkedIn חוסם גישה ישירה, אך Tavily מוצא תוכן מאונדקס בגוגל.
     """
+
+    # [LATENCY] מדידת זמן כולל של ה-agent
+    _t_agent = time.perf_counter()
+    _ts_agent = datetime.now().isoformat(timespec='milliseconds')
 
     client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
@@ -47,7 +53,7 @@ def run(company_name: str, job_title: str) -> dict:
         search_depth="basic"
     )
 
-    return {
+    result = {
         "company_name": company_name,
         "job_title": job_title,
         "job_requirements": _extract_snippets(job_results),
@@ -55,6 +61,10 @@ def run(company_name: str, job_title: str) -> dict:
         "team_structure":   _extract_snippets(team_results),
         "hiring_signals":   _extract_snippets(hiring_results),
     }
+    _duration = time.perf_counter() - _t_agent
+    print(f"[LATENCY] {_ts_agent}  agent/linkedin  {_duration:.3f}s")
+    result["_timing"] = {"name": "linkedin", "start": _ts_agent, "duration": _duration}
+    return result
 
 
 def _extract_snippets(search_response: dict) -> list[str]:

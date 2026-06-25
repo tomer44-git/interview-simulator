@@ -2,12 +2,14 @@
 # POST /research — מריץ את כל ה-research agents במקביל דרך Celery
 # מחכה לכל התוצאות ומחזיר אותן יחד
 
+import time
 from fastapi import APIRouter, HTTPException
 from celery import group
 
 from models.schemas import ResearchRequest, ResearchResponse
 from tasks.research_tasks import AGENT_TASK_MAP
 from domains import domain_loader
+from latency import _record, clear_measurements, print_research_summary
 
 router = APIRouter()
 
@@ -24,6 +26,12 @@ def research(req: ResearchRequest):
     3. מחכה לכולם (עד 120 שניות)
     4. מרכיב את התוצאות ומחזיר
     """
+    # [LATENCY] מאפס מדידות ומתחיל מדידת שלב research
+    clear_measurements()
+    _t_stage = time.perf_counter()
+    from datetime import datetime as _dt
+    _ts_stage = _dt.now().isoformat(timespec='milliseconds')
+
     # ---- 1. אילו agents מריצים לתפקיד הזה? ----
     domain_config    = domain_loader.load(req.job_title)
     agents_to_run    = domain_config["research_agents"]  # למשל: ["company","glassdoor",...]
@@ -46,8 +54,18 @@ def research(req: ResearchRequest):
         raise HTTPException(status_code=500, detail=f"Research failed: {str(e)}")
 
     # ---- 4. ממפה תוצאות לשמות ה-agents ----
-    # results_list מגיע כרשימה — agent_name[0] מקביל לresult[0]
     results = dict(zip(agents_to_run, results_list))
+
+    # [LATENCY] חולץ timing מכל agent ומדפיס טבלת השוואת מקביליות
+    agent_timings = []
+    for name in agents_to_run:
+        t = results[name].pop("_timing", None)  # מסיר _timing לפני הסריאליזציה
+        if t:
+            agent_timings.append(t)
+    stage_duration = time.perf_counter() - _t_stage
+    _record("stage/research", _ts_stage, stage_duration)
+    if agent_timings:
+        print_research_summary(stage_duration, agent_timings)
 
     # מוודא שכל שדה קיים (agents שלא רצו = dict ריק)
     return ResearchResponse(

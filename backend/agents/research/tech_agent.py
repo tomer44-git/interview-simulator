@@ -3,6 +3,8 @@
 # קלט: שם חברה + תפקיד | פלט: dict עם נושאים טכניים לראיון
 
 import os
+import time
+from datetime import datetime
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
@@ -15,6 +17,10 @@ def run(company_name: str, job_title: str) -> dict:
     מחפש תוכן טכני שמכין את מנוע השאלות לשאלות קידוד ו-system design.
     התוצאות מוזנות ישירות ל-interview_agent ליצירת שאלות טכניות מדויקות.
     """
+
+    # [LATENCY] מדידת זמן כולל של ה-agent
+    _t_agent = time.perf_counter()
+    _ts_agent = datetime.now().isoformat(timespec='milliseconds')
 
     client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
@@ -48,7 +54,7 @@ def run(company_name: str, job_title: str) -> dict:
         search_depth="basic"
     )
 
-    return {
+    result = {
         "company_name":    company_name,
         "job_title":       job_title,
         "coding_patterns": _extract_snippets(leetcode_results),
@@ -56,6 +62,10 @@ def run(company_name: str, job_title: str) -> dict:
         "system_design":   _extract_snippets(system_design_results),
         "tech_challenges": _extract_snippets(challenges_results),
     }
+    _duration = time.perf_counter() - _t_agent
+    print(f"[LATENCY] {_ts_agent}  agent/tech  {_duration:.3f}s")
+    result["_timing"] = {"name": "tech", "start": _ts_agent, "duration": _duration}
+    return result
 
 
 def _extract_snippets(search_response: dict) -> list[str]:

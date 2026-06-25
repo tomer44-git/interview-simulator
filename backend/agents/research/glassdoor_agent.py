@@ -3,6 +3,8 @@
 # קלט: שם חברה + תפקיד | פלט: dict עם שאלות, תהליך, ורמת קושי
 
 import os
+import time
+from datetime import datetime
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
@@ -16,6 +18,10 @@ def run(company_name: str, job_title: str) -> dict:
     company_name — שם החברה (לדוגמה: "Wix")
     job_title    — התפקיד המבוקש (לדוגמה: "Frontend Developer")
     """
+
+    # [LATENCY] מדידת זמן כולל של ה-agent
+    _t_agent = time.perf_counter()
+    _ts_agent = datetime.now().isoformat(timespec='milliseconds')
 
     # מאתחל את לקוח Tavily עם המפתח מה-.env
     client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
@@ -51,7 +57,7 @@ def run(company_name: str, job_title: str) -> dict:
     )
 
     # ---- מחזיר dict מסודר ----
-    return {
+    result = {
         "company_name": company_name,
         "job_title": job_title,
         "reported_questions":     _extract_snippets(questions_results),
@@ -59,6 +65,11 @@ def run(company_name: str, job_title: str) -> dict:
         "technical_topics":       _extract_snippets(technical_results),
         "difficulty_and_process": _extract_snippets(difficulty_results),
     }
+    # [LATENCY] מחזיר timing לroutr להשוואת מקביליות
+    _duration = time.perf_counter() - _t_agent
+    print(f"[LATENCY] {_ts_agent}  agent/glassdoor  {_duration:.3f}s")
+    result["_timing"] = {"name": "glassdoor", "start": _ts_agent, "duration": _duration}
+    return result
 
 
 def _extract_snippets(search_response: dict) -> list[str]:

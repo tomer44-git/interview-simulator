@@ -4,6 +4,7 @@
 
 import os
 import json
+import time
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
@@ -72,11 +73,14 @@ Return ONLY valid JSON — no markdown, no explanation, just the JSON object:
   "company_context": "one sentence about what makes this company unique to interview at"
 }}"""
 
+    # [LATENCY] מודד את קריאת Claude API — זה ה-bottleneck של שלב הפרסונה
+    _t = time.perf_counter()
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}]
     )
+    print(f"[LATENCY] claude/persona_builder  {time.perf_counter()-_t:.3f}s")
 
     raw_text = response.content[0].text.strip()
 

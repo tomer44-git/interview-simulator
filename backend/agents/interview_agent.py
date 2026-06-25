@@ -4,6 +4,7 @@
 
 import os
 import json
+import time
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
@@ -77,12 +78,15 @@ Rules:
     # ממיר את ההיסטוריה לפורמט שה-API מצפה לו
     messages = _history_to_messages(state["history"])
 
+    # [LATENCY] מודד כל קריאת Claude — נקרא פעם אחת לכל תור בראיון
+    _t = time.perf_counter()
     response = client.messages.create(
         model="claude-sonnet-4-5-20250929",
         max_tokens=300,   # תגובות קצרות — ראיון, לא נאום
         system=system_prompt,
         messages=messages
     )
+    print(f"[LATENCY] claude/interview_turn  {time.perf_counter()-_t:.3f}s")
 
     interviewer_reply = response.content[0].text.strip()
 

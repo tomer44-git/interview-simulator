@@ -1,11 +1,14 @@
 # routers/feedback.py
 # POST /feedback — מנתח ראיון שהסתיים ומחזיר ציונים + שומר ל-Supabase
 
+import time
+from datetime import datetime
 from fastapi import APIRouter, HTTPException
 from models.schemas import FeedbackRequest, FeedbackResponse
 from agents import feedback_agent
 from domains import domain_loader
 import supabase_client
+from latency import _record, print_full_summary
 
 router = APIRouter()
 
@@ -27,7 +30,11 @@ def feedback(req: FeedbackRequest):
         domain_config = domain_loader.load(req.job_title)
 
         # ---- 2. מריץ את feedback_agent — קריאה לClaude ----
+        _t = time.perf_counter()
+        _ts = datetime.now().isoformat(timespec='milliseconds')
         scores = feedback_agent.run(req.state, req.persona, domain_config)
+        _record("stage/feedback", _ts, time.perf_counter() - _t)
+        print_full_summary()  # [LATENCY] מדפיס טבלת סיכום בסוף כל pipeline מלא
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Feedback failed: {str(e)}")

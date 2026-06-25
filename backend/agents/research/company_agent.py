@@ -3,6 +3,8 @@
 # קלט: שם חברה + תפקיד | פלט: dict עם מידע על החברה
 
 import os
+import time
+from datetime import datetime
 from dotenv import load_dotenv
 from tavily import TavilyClient
 
@@ -17,6 +19,10 @@ def run(company_name: str, job_title: str) -> dict:
     job_title    — התפקיד המבוקש (לדוגמה: "Junior AI Engineer")
     """
 
+    # [LATENCY] מדידת זמן כולל של ה-agent מתחילה כאן
+    _t_agent = time.perf_counter()
+    _ts_agent = datetime.now().isoformat(timespec='milliseconds')
+
     # מאתחל את לקוח Tavily עם המפתח מה-.env
     client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
@@ -24,36 +30,44 @@ def run(company_name: str, job_title: str) -> dict:
     # כל שאילתה מכוונת למידע ספציפי כדי שנקבל תוצאות רלוונטיות יותר
 
     # שאילתה 1: תיאור כללי של החברה
+    _t = time.perf_counter()
     overview_results = client.search(
         query=f"{company_name} company overview mission products 2024 2025",
         max_results=3,
         search_depth="basic"
     )
+    print(f"[LATENCY] tavily/company/overview  {time.perf_counter()-_t:.3f}s")
 
     # שאילתה 2: ה-tech stack שהחברה משתמשת בו
+    _t = time.perf_counter()
     tech_results = client.search(
         query=f"{company_name} tech stack engineering technologies {job_title}",
         max_results=3,
         search_depth="basic"
     )
+    print(f"[LATENCY] tavily/company/tech_stack  {time.perf_counter()-_t:.3f}s")
 
     # שאילתה 3: בלוג הנדסי / תרבות הצוות הטכני
+    _t = time.perf_counter()
     culture_results = client.search(
         query=f"{company_name} engineering blog culture values team",
         max_results=2,
         search_depth="basic"
     )
+    print(f"[LATENCY] tavily/company/culture  {time.perf_counter()-_t:.3f}s")
 
     # שאילתה 4: חדשות אחרונות על החברה
+    _t = time.perf_counter()
     news_results = client.search(
         query=f"{company_name} latest news product launch funding 2024 2025",
         max_results=2,
         search_depth="basic"
     )
+    print(f"[LATENCY] tavily/company/news  {time.perf_counter()-_t:.3f}s")
 
     # ---- מעבד את התוצאות לפורמט נקי ----
     # הפונקציה _extract_snippets מוציאה רק את טקסט התוצאות (בלי URLs ומטא-דאטה)
-    return {
+    result = {
         "company_name": company_name,
         "job_title": job_title,
         "overview": _extract_snippets(overview_results),
@@ -61,6 +75,12 @@ def run(company_name: str, job_title: str) -> dict:
         "culture": _extract_snippets(culture_results),
         "recent_news": _extract_snippets(news_results),
     }
+
+    # [LATENCY] מחזיר את זמן הריצה הכולל — יחולץ ע"י research router להשוואת מקביליות
+    _duration = time.perf_counter() - _t_agent
+    print(f"[LATENCY] {_ts_agent}  agent/company  {_duration:.3f}s  (total)")
+    result["_timing"] = {"name": "company", "start": _ts_agent, "duration": _duration}
+    return result
 
 
 def _extract_snippets(search_response: dict) -> list[str]:
