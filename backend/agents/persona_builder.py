@@ -12,6 +12,17 @@ from anthropic import Anthropic
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../.env"), override=True)
 
 
+def _clean(obj):
+    """מנקה רקורסיבית   (LINE SEP) ו-  (PARA SEP) מכל מחרוזת בכל רמת dict/list"""
+    if isinstance(obj, str):
+        return obj.replace(' ', ' ').replace(' ', ' ')
+    if isinstance(obj, list):
+        return [_clean(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: _clean(v) for k, v in obj.items()}
+    return obj
+
+
 def run(company_data: dict, glassdoor_data: dict,
         linkedin_data: dict, news_data: dict,
         neetcode_data: dict = None) -> dict:
@@ -19,6 +30,15 @@ def run(company_data: dict, glassdoor_data: dict,
     בונה פרסונת מראיין. neetcode_data אופציונלי — אם קיים, שאלות הקידוד
     יהיו ספציפיות לבעיות ול-patterns שנשאלים בחברה הזו.
     """
+
+    # מנקה את כל הנתונים מTavily לפני שמשתמשים בהם —
+    #   ו-  מגיעים מתוכן שנגרד מהאינטרנט ושוברים את ה-stdout של Railway
+    company_data   = _clean(company_data)
+    glassdoor_data = _clean(glassdoor_data)
+    linkedin_data  = _clean(linkedin_data)
+    news_data      = _clean(news_data)
+    if neetcode_data:
+        neetcode_data = _clean(neetcode_data)
 
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key or api_key == "your_anthropic_key_here":
