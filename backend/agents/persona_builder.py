@@ -106,10 +106,12 @@ def _prepare_summary(company_data: dict, glassdoor_data: dict,
     """
 
     def first(lst: list, max_chars: int = 400) -> str:
-        """מחזיר snippet ראשון מרשימה, חתוך ל-max_chars"""
+        """מחזיר snippet ראשון מרשימה, חתוך ל-max_chars, ומנקה תווי Unicode בעייתיים"""
         if not lst:
             return "No data found"
-        return str(lst[0])[:max_chars]
+        text = str(lst[0])[:max_chars]
+        #   = LINE SEPARATOR,   = PARAGRAPH SEPARATOR — מגיעים מTavily ושוברים ASCII stdout
+        return text.replace(' ', ' ').replace(' ', ' ')
 
     summary = f"""
 COMPANY: {company_data.get('company_name')} | ROLE: {company_data.get('job_title')}

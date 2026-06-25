@@ -5,6 +5,13 @@
 import sys
 import os
 
+# מבטיח UTF-8 על stdout ו-stderr לפני כל import — Railway מגדיר ASCII כברירת מחדל
+# חייב להיות לפני כל import אחר כדי שיספיק לכסות את כל הפרינטים
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 # מוסיף את תיקיית backend ל-path כדי שכל הimports יעבדו
 sys.path.insert(0, os.path.dirname(__file__))
 
