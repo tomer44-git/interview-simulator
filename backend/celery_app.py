@@ -20,6 +20,7 @@ celery = Celery(
     "interview_simulator",
     broker=REDIS_URL,
     backend=REDIS_URL,
+    include=["tasks.research_tasks"],  # טוען את ה-tasks כשהWorker מתחיל
 )
 
 # ---- הגדרות סידור נתונים ----
