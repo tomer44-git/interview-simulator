@@ -2,10 +2,15 @@
 # מודול מדידת latency קל-משקל — time.perf_counter() בלבד, אין תלויות חיצוניות
 # תומך ב-sync וב-async functions
 
+import sys
 import time
 import asyncio
 import functools
 from datetime import datetime
+
+# מבטיח UTF-8 כ-encoding של stdout — Railway מגדיר ASCII כברירת מחדל
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # אחסון in-memory של מדידות ה-FastAPI process (לא נשמר בין restarts)
 _measurements: list[dict] = []
@@ -66,7 +71,7 @@ def print_research_summary(stage_duration: float, agent_timings: list[dict]):
     print("  RESEARCH STAGE — PARALLELISM PROOF")
     print("=" * 58)
     for a in sorted(agent_timings, key=lambda x: -x["duration"]):
-        bar = "█" * int(a["duration"] * 3)
+        bar = "#" * int(a["duration"] * 3)
         print(f"  {a['name']:<12}  {a['duration']:.3f}s  {bar}")
     durations = [a["duration"] for a in agent_timings]
     print(f"\n  SUM  (if sequential): {sum(durations):.3f}s")
