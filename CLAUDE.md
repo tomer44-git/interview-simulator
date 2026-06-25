@@ -99,15 +99,23 @@ REDIS_URL=your_redis_url_here
 - ✅ Step 6:   FastAPI + Celery + Redis backend — 4 routes: /research /persona /interview /feedback (DONE — 2026-06-18)
 - ✅ Step 7:   Full React frontend — landing, loading, interview, feedback screens (DONE — 2026-06-18)
 - ✅ Step 8:   Feedback Agent + Supabase session storage (DONE — 2026-06-18)
-- 🔜 Step 9:   Deploy — Vercel (frontend) + Railway (backend + Redis) (NEXT)
-- ⬜ Step 7:   Full React frontend — landing, research screen, interview screen
-- ⬜ Step 8:   Feedback + scoring system + Supabase session storage
-- ⬜ Step 9:   Deploy — Vercel (frontend) + Railway (backend + Redis)
-- ⬜ Step 10:  Testing, polish, README, demo
+- ✅ Step 9:   Deploy — Vercel (frontend) + Railway (backend + Redis + Celery worker) (DONE — 2026-06-25)
+- ✅ Step 9.5: Latency instrumentation — time.perf_counter() on all API calls + pipeline stages (DONE — 2026-06-25)
+- 🔜 Step 10:  Testing, polish, README, demo
+
+## Live URLs
+- Frontend: https://interview-simulator-rose.vercel.app
+- Backend:  https://interview-simulator-production-b88c.up.railway.app
+- GitHub:   https://github.com/tomer44-git/interview-simulator.git
+
+## Infrastructure
+- Vercel: frontend deployed, VITE_API_URL → Railway backend
+- Railway: interview-simulator (FastAPI, Online) + Redis (Online) + perceptive-compassion (Celery worker, Online)
+- Supabase: https://ckthaweepviqodmqkrip.supabase.co
 
 ## Current Status
-**Step 6 — COMPLETE ✅**
-Last updated: 2026-06-18
+**Step 9 + 9.5 — COMPLETE ✅**
+Last updated: 2026-06-25
 
 ### What was done in Step 1:
 - Full project folder structure + CLAUDE.md + .env with placeholders
@@ -140,20 +148,28 @@ Last updated: 2026-06-18
 - `interview_agent.py` updated — hardcoded QUESTION_FLOW removed; accepts domain_config param in start() and next_turn()
 - `test_agents.py` updated — loads domain_config via domain_loader and passes to interview_agent
 
-### What is NOT done yet:
-- No FastAPI server (Step 6)
-- No React frontend (Step 7)
-- No Supabase/feedback (Step 8)
+### What was done in Step 9 (Deploy):
+- `.gitignore` — excludes .env, venv, node_modules, dist
+- `backend/Procfile` — Railway start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- `frontend/src/api.js` — `VITE_API_URL` env var for production backend URL
+- Vercel: frontend deployed, env var set, CORS URLs configured in main.py
+- Railway: FastAPI service (Root Directory = `backend`), Redis service, Celery worker service
+  - Celery start command: `celery -A celery_app worker --loglevel=info --concurrency=2`
+  - C_FORCE_ROOT=1 added to Celery worker (Railway runs as root)
+  - All API keys added as Railway environment variables
 
-### Run the test:
-```bash
-cd ~/Desktop/interview-simulator/backend
-source venv/bin/activate
-python test_agents.py
-```
+### What was done in Step 9.5 (Latency Instrumentation):
+- `backend/latency.py` (NEW) — `measure_latency()` decorator (sync+async), `_measurements` list, `print_research_summary()`, `print_full_summary()`
+- All 6 research agents — agent-level timing + `_timing` key returned in dict for parallelism proof
+- `company_agent.py` specifically — per-call Tavily timing on all 4 individual searches
+- `persona_builder.py`, `interview_agent.py`, `feedback_agent.py` — Claude API call timing
+- All 4 routers — stage-level timing recorded to `_measurements`
+- `routers/research.py` — extracts `_timing` from each agent result, calls `print_research_summary()`
+- `routers/feedback.py` — calls `print_full_summary()` at end of complete pipeline run
+- Logs appear in Railway Console: per-call logs in perceptive-compassion, stage logs in interview-simulator
 
-### Up Next — Step 6:
-FastAPI + Celery + Redis — 4 routes: `/research`, `/persona`, `/interview`, `/feedback`
+### Up Next — Step 10:
+End-to-end test via https://interview-simulator-rose.vercel.app, then polish + README
 
 ## Rules
 - Always add Hebrew comments inside code blocks explaining what each part does
