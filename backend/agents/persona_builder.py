@@ -13,9 +13,9 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "../../.env"), o
 
 
 def _clean(obj):
-    """מנקה רקורסיבית   (LINE SEP) ו-  (PARA SEP) מכל מחרוזת בכל רמת dict/list"""
+    """cleans all non-ASCII from Tavily data before use"""
     if isinstance(obj, str):
-        return obj.replace(' ', ' ').replace(' ', ' ')
+        return obj.encode('ascii', errors='replace').decode('ascii')
     if isinstance(obj, list):
         return [_clean(i) for i in obj]
     if isinstance(obj, dict):

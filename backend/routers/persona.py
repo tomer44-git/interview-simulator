@@ -34,6 +34,14 @@ def build_persona(req: PersonaRequest):
             neetcode_data=req.research.get("neetcode",  {}),
         )
         _record("stage/persona", _ts, time.perf_counter() - _t)
+    except UnicodeEncodeError as ue:
+        # מאתר בדיוק איפה נמצא התו הבעייתי — מידע זה יופיע ב-Railway Logs
+        char_hex = hex(ord(ue.object[ue.start]))
+        ctx_start = max(0, ue.start - 15)
+        # מנקה את ה-context לפני הדפסה כדי שלא ייכשל גם הוא
+        ctx = ue.object[ctx_start: ue.start + 15].encode('ascii', errors='replace').decode('ascii')
+        print(f"[UNICODE-DEBUG] char={char_hex} pos={ue.start} ctx={ctx!r}", flush=True)
+        raise HTTPException(status_code=500, detail=f"Persona build failed (unicode {char_hex} at pos {ue.start}): contact dev")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Persona build failed: {str(e)}")
 
