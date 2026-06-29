@@ -36,10 +36,9 @@ def build_persona(req: PersonaRequest):
         _record("stage/persona", _ts, time.perf_counter() - _t)
     except UnicodeEncodeError as ue:
         char_hex = hex(ord(ue.object[ue.start]))
-        # שולח 80 תווים לפני ה-position לfrontend כדי לאבחן בדיוק מה המחרוזת
-        ctx_start = max(0, ue.start - 80)
-        ctx = ue.object[ctx_start: ue.start + 20].encode('ascii', errors='replace').decode('ascii')
-        raise HTTPException(status_code=500, detail=f"[DEBUG] char={char_hex} pos={ue.start} ctx={ctx!r}")
+        # מראה את ה-200 תווים הראשונים של ה-string כדי לדעת מה הוא
+        start200 = ue.object[:200].encode('ascii', errors='replace').decode('ascii')
+        raise HTTPException(status_code=500, detail=f"[DEBUG] char={char_hex} pos={ue.start} START={start200!r}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Persona build failed: {str(e)}")
 
