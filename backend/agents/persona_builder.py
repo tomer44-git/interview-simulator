@@ -32,7 +32,7 @@ def run(company_data: dict, glassdoor_data: dict,
     """
 
     # מנקה את כל הנתונים מTavily לפני שמשתמשים בהם —
-    #   ו-  מגיעים מתוכן שנגרד מהאינטרנט ושוברים את ה-stdout של Railway
+    # U+2028 (LINE SEP) and U+2029 (PARA SEP) from Tavily web content break Railway ASCII stdout
     company_data   = _clean(company_data)
     glassdoor_data = _clean(glassdoor_data)
     linkedin_data  = _clean(linkedin_data)
@@ -130,8 +130,8 @@ def _prepare_summary(company_data: dict, glassdoor_data: dict,
         if not lst:
             return "No data found"
         text = str(lst[0])[:max_chars]
-        #   = LINE SEPARATOR,   = PARAGRAPH SEPARATOR — מגיעים מTavily ושוברים ASCII stdout
-        return text.replace(' ', ' ').replace(' ', ' ')
+        # chr(0x2028)=LINE SEP, chr(0x2029)=PARA SEP -- strip these from Tavily content
+        return text.replace(chr(0x2028), ' ').replace(chr(0x2029), ' ')
 
     summary = f"""
 COMPANY: {company_data.get('company_name')} | ROLE: {company_data.get('job_title')}
