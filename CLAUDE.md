@@ -7,7 +7,7 @@ A multi-agent AI system that researches a target company in real time (Glassdoor
 Tomer Ben Bassat — Computer Science student, 3.5 years cloud operations experience. Beginner-level coder. Every explanation should be simple. Every code block must have comments explaining what each part does. Before writing any code, explain in 2 sentences what we are about to build. If something can break, warn me before it happens.
 
 ## Tech Stack
-- Frontend: React + Vite
+- Frontend: React + Vite + lucide-react (icons)
 - Backend: Python FastAPI
 - Task Queue: Celery + Redis (manages parallel agents efficiently)
 - AI: Claude API (claude-sonnet-4-5-20250929)
