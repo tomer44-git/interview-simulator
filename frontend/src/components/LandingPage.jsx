@@ -1,15 +1,17 @@
-// LandingPage.jsx — מסך כניסה: טופס עם שם חברה + תפקיד
+// LandingPage.jsx — מסך כניסה: טופס עם שם חברה + תפקיד + בחירת שפה
 import { useState } from 'react'
 import { Building2, Briefcase } from 'lucide-react'
 
 export default function LandingPage({ onStart }) {
   const [company,  setCompany]  = useState('')
   const [jobTitle, setJobTitle] = useState('')
+  const [language, setLanguage] = useState('en')  // "en" או "he"
 
   function handleSubmit(e) {
-    e.preventDefault()  // מונע רענון דף ברגיל
+    e.preventDefault()
     if (!company.trim() || !jobTitle.trim()) return
-    onStart(company.trim(), jobTitle.trim())
+    // מעביר את השפה כפרמטר שלישי
+    onStart(company.trim(), jobTitle.trim(), language)
   }
 
   return (
@@ -20,9 +22,22 @@ export default function LandingPage({ onStart }) {
           Real-time AI research · Personalized interviewer · Role-specific questions
         </p>
 
+        {/* ── בורר שפה ── */}
+        <div className="lang-toggle">
+          <button
+            type="button"
+            className={`lang-btn ${language === 'en' ? 'lang-btn--active' : ''}`}
+            onClick={() => setLanguage('en')}
+          >EN</button>
+          <button
+            type="button"
+            className={`lang-btn ${language === 'he' ? 'lang-btn--active' : ''}`}
+            onClick={() => setLanguage('he')}
+          >HE</button>
+        </div>
+
         <form onSubmit={handleSubmit} className="landing-form">
           <label>Company Name</label>
-          {/* עטיפת אייקון Building2 + שדה קלט */}
           <div className="input-icon-wrap">
             <Building2 size={16} strokeWidth={2} />
             <input
@@ -35,7 +50,6 @@ export default function LandingPage({ onStart }) {
           </div>
 
           <label>Job Title</label>
-          {/* עטיפת אייקון Briefcase + שדה קלט */}
           <div className="input-icon-wrap">
             <Briefcase size={16} strokeWidth={2} />
             <input

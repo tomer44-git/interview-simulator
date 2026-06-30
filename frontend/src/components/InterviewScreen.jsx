@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { User, Briefcase, MessageSquare, Send } from 'lucide-react'
 import ChatBubble from './ChatBubble'
 
-export default function InterviewScreen({ messages, persona, state, onSend }) {
+export default function InterviewScreen({ messages, persona, state, language = 'en', onSend }) {
   const [input, setInput]   = useState('')
   const [busy,  setBusy]    = useState(false)  // true בזמן שממתינים לתגובת המראיין
   const bottomRef = useRef(null)
@@ -30,8 +30,8 @@ export default function InterviewScreen({ messages, persona, state, onSend }) {
   const total = 8  // לפי question_flow ברירת מחדל
 
   return (
-    // wrapper מלא-רוחב עם רקע לבנדר-כהה
-    <div className="interview-wrapper">
+    // dir="rtl" כשהשפה עברית — מטפל בכל היישור והכיוון אוטומטית
+    <div className="interview-wrapper" dir={language === 'he' ? 'rtl' : 'ltr'}>
       <div className="interview-screen">
 
         {/* ── header ── */}
@@ -78,7 +78,7 @@ export default function InterviewScreen({ messages, persona, state, onSend }) {
         <form className="input-row" onSubmit={handleSend}>
           <input
             type="text"
-            placeholder="Type your answer..."
+            placeholder={language === 'he' ? 'כתוב את תשובתך...' : 'Type your answer...'}
             value={input}
             onChange={e => setInput(e.target.value)}
             disabled={busy}

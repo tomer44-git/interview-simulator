@@ -30,7 +30,7 @@ def start_interview(req: InterviewStartRequest):
         domain_config = domain_loader.load(req.job_title)
 
         # ---- פותח ראיון — מחזיר פתיחה + state ריק ----
-        result = interview_agent.start(req.persona, domain_config)
+        result = interview_agent.start(req.persona, domain_config, language=req.language)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Interview start failed: {str(e)}")
 
@@ -60,6 +60,7 @@ def interview_turn(req: InterviewTurnRequest):
             req.state,
             req.persona,
             domain_config,
+            language=req.language,
         )
         _record("stage/interview_turn", _ts, time.perf_counter() - _t)
     except Exception as e:

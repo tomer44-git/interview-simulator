@@ -25,10 +25,10 @@ def _clean(obj):
 
 def run(company_data: dict, glassdoor_data: dict,
         linkedin_data: dict, news_data: dict,
-        neetcode_data: dict = None) -> dict:
+        neetcode_data: dict = None, language: str = "en") -> dict:
     """
-    בונה פרסונת מראיין. neetcode_data אופציונלי — אם קיים, שאלות הקידוד
-    יהיו ספציפיות לבעיות ול-patterns שנשאלים בחברה הזו.
+    בונה פרסונת מראיין. neetcode_data אופציונלי.
+    language: "en" לאנגלית, "he" לעברית — קובע את שפת הפרסונה.
     """
 
     # מנקה את כל הנתונים מTavily לפני שמשתמשים בהם —
@@ -62,9 +62,12 @@ def run(company_data: dict, glassdoor_data: dict,
             "in the coding_question field — don't invent generic ones."
         )
 
+    # הוראת שפה — שורה אחת שמספיקה לגרום ל-Claude לדבר בשפה הנכונה
+    lang_instruction = "\nIMPORTANT: Generate ALL text fields in Hebrew." if language == "he" else ""
+
     prompt = f"""You are an expert at creating realistic job interview simulations.
 
-Based on this company research, create a realistic interviewer persona.{coding_instruction}
+Based on this company research, create a realistic interviewer persona.{coding_instruction}{lang_instruction}
 
 === RESEARCH DATA ===
 {research_summary}

@@ -43,6 +43,21 @@ body {
 .landing-card h1 { font-size: 28px; margin-bottom: 8px; }
 .subtitle { color: var(--fg-dim); font-size: 13px; margin-bottom: 32px; }
 .landing-form { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── בורר שפה EN / HE ── */
+.lang-toggle { display: flex; gap: 6px; margin-bottom: 20px; }
+.lang-btn {
+  padding: 6px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--fg-dim);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.lang-btn--active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .landing-form label { font-size: 13px; color: var(--fg-dim); font-weight: 500; }
 
 /* עטיפת אייקון + שדה קלט — מחליפה את ה-input הישן */

@@ -23,9 +23,10 @@ class ResearchResponse(BaseModel):
 
 # ── /persona ───────────────────────────────────────────
 class PersonaRequest(BaseModel):
-    # מקבל את כל נתוני המחקר + שם התפקיד
+    # מקבל את כל נתוני המחקר + שם התפקיד + שפה ("en" / "he")
     research:  dict
     job_title: str
+    language:  str = "en"
 
 class PersonaResponse(BaseModel):
     # מחזיר את הפרסונה שנבנתה
@@ -34,9 +35,10 @@ class PersonaResponse(BaseModel):
 
 # ── /interview/start ───────────────────────────────────
 class InterviewStartRequest(BaseModel):
-    # פותח ראיון חדש — צריך פרסונה ושם תפקיד
+    # פותח ראיון חדש — צריך פרסונה, שם תפקיד ושפה
     persona:   dict
     job_title: str
+    language:  str = "en"
 
 class InterviewStartResponse(BaseModel):
     # מחזיר את משפט הפתיחה + ה-state הריק
@@ -46,11 +48,12 @@ class InterviewStartResponse(BaseModel):
 
 # ── /interview/turn ────────────────────────────────────
 class InterviewTurnRequest(BaseModel):
-    # כל תור: תשובת המועמד + ה-state הנוכחי + הפרסונה + תפקיד
+    # כל תור: תשובת המועמד + ה-state הנוכחי + הפרסונה + תפקיד + שפה
     user_message: str
     state:        dict
     persona:      dict
     job_title:    str
+    language:     str = "en"
 
 class InterviewTurnResponse(BaseModel):
     # מחזיר את תגובת המראיין + ה-state המעודכן + האם הסתיים
@@ -61,10 +64,11 @@ class InterviewTurnResponse(BaseModel):
 
 # ── /feedback ──────────────────────────────────────────
 class FeedbackRequest(BaseModel):
-    # מקבל את כל ה-state (כולל history) + פרסונה + תפקיד לניתוח
+    # מקבל את כל ה-state (כולל history) + פרסונה + תפקיד + שפה לניתוח
     state:     dict
     persona:   dict
     job_title: str
+    language:  str = "en"
 
 class CategoryScore(BaseModel):
     # ציון + פידבק לקטגוריה בודדת
