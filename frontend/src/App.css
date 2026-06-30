@@ -1,15 +1,15 @@
 /* App.css — עיצוב גלובלי, תמה כהה */
 :root {
-  --bg:        #0f1117;
-  --bg-card:   #1c2333;
-  --bg-input:  #141822;
-  --border:    #2a3142;
-  --accent:    #4a9eff;
-  --accent-dk: #2d6fd6;
-  --fg:        #e8eaf0;
-  --fg-dim:    #8892a4;
-  --green:     #3fcf8e;
-  --error:     #f87171;
+  --bg:        #ede9f8; /* רקע לבנדר בהיר לכל האפליקציה */
+  --bg-card:   #ffffff; /* כרטיסים לבנים */
+  --bg-input:  #faf8ff; /* שדות קלט — לבן עם גוון סגול עדין */
+  --border:    #d0c8ee; /* גבולות סגול בהיר */
+  --accent:    #7c5cbf; /* צבע ראשי — סגול */
+  --accent-dk: #6347a8; /* סגול כהה ל-hover */
+  --fg:        #1e1635; /* טקסט ראשי — כהה */
+  --fg-dim:    #6b5fa0; /* טקסט משני — סגול מושתק */
+  --green:     #2e9e6b; /* ירוק — כהה יותר כדי לעבוד על רקע בהיר */
+  --error:     #c0392b; /* שגיאה — אדום כהה */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -44,17 +44,29 @@ body {
 .subtitle { color: var(--fg-dim); font-size: 13px; margin-bottom: 32px; }
 .landing-form { display: flex; flex-direction: column; gap: 12px; }
 .landing-form label { font-size: 13px; color: var(--fg-dim); font-weight: 500; }
-.landing-form input {
+
+/* עטיפת אייקון + שדה קלט — מחליפה את ה-input הישן */
+.input-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   background: var(--bg-input);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
-  color: var(--fg);
-  font-size: 14px;
-  padding: 10px 14px;
-  outline: none;
+  padding: 0 12px;
+  color: var(--fg-dim);
   transition: border-color .15s;
 }
-.landing-form input:focus { border-color: var(--accent); }
+.input-icon-wrap:focus-within { border-color: var(--accent); }
+.input-icon-wrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  font-size: 14px;
+  padding: 10px 0;
+  outline: none;
+}
 .btn-primary {
   margin-top: 8px;
   background: var(--accent);
@@ -92,6 +104,14 @@ body {
 .loading-hint { font-size: 13px; color: var(--fg-dim); }
 
 /* ── Interview ── */
+
+/* wrapper מלא-רוחב — הרקע מגיע מה-body, הwrapper מטפל רק ב-layout */
+.interview-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .interview-screen {
   flex: 1;
   display: flex;
@@ -108,10 +128,12 @@ body {
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
 }
-.interviewer-info { display: flex; flex-direction: column; gap: 2px; }
-.interviewer-name { font-weight: 600; font-size: 15px; }
-.interviewer-title { font-size: 12px; color: var(--fg-dim); }
-.progress { font-size: 12px; color: var(--fg-dim); }
+.interviewer-info { display: flex; flex-direction: column; gap: 4px; }
+
+/* flex כדי שהאייקון ייושר עם הטקסט */
+.interviewer-name  { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+.interviewer-title { font-size: 12px; color: var(--fg-dim); display: flex; align-items: center; gap: 5px; }
+.progress          { font-size: 12px; color: var(--fg-dim); display: flex; align-items: center; gap: 5px; }
 
 .messages-list {
   flex: 1;
@@ -123,7 +145,8 @@ body {
 }
 .bubble-row { display: flex; align-items: flex-end; gap: 8px; }
 .bubble-row.right { flex-direction: row-reverse; }
-.avatar { font-size: 22px; flex-shrink: 0; }
+/* avatar — גודל קבוע כדי שאייקון SVG ייושר עם הבועה */
+.avatar { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--fg-dim); }
 .bubble {
   max-width: 75%;
   padding: 10px 14px;
@@ -164,12 +187,13 @@ body {
 .input-row input {
   flex: 1;
   background: var(--bg-input);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   color: var(--fg);
   font-size: 14px;
   padding: 10px 14px;
   outline: none;
+  transition: border-color .15s;
 }
 .input-row input:focus { border-color: var(--accent); }
 .btn-send {
@@ -177,10 +201,15 @@ body {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 10px 20px;
-  font-weight: 600;
+  padding: 10px;           /* ריפוד אחיד לכפתור אייקון */
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
+  flex-shrink: 0;
 }
+.btn-send:hover:not(:disabled) { background: var(--accent-dk); }
 .btn-send:disabled { opacity: .45; cursor: not-allowed; }
 
 /* ── Feedback ── */

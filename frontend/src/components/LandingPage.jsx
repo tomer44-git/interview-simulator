@@ -1,5 +1,6 @@
 // LandingPage.jsx — מסך כניסה: טופס עם שם חברה + תפקיד
 import { useState } from 'react'
+import { Building2, Briefcase } from 'lucide-react'
 
 export default function LandingPage({ onStart }) {
   const [company,  setCompany]  = useState('')
@@ -21,21 +22,29 @@ export default function LandingPage({ onStart }) {
 
         <form onSubmit={handleSubmit} className="landing-form">
           <label>Company Name</label>
-          <input
-            type="text"
-            placeholder="e.g. Wix, Google, Startup XYZ"
-            value={company}
-            onChange={e => setCompany(e.target.value)}
-            autoFocus
-          />
+          {/* עטיפת אייקון Building2 + שדה קלט */}
+          <div className="input-icon-wrap">
+            <Building2 size={16} strokeWidth={2} />
+            <input
+              type="text"
+              placeholder="e.g. Wix, Google, Startup XYZ"
+              value={company}
+              onChange={e => setCompany(e.target.value)}
+              autoFocus
+            />
+          </div>
 
           <label>Job Title</label>
-          <input
-            type="text"
-            placeholder="e.g. Frontend Developer, Junior AI Engineer"
-            value={jobTitle}
-            onChange={e => setJobTitle(e.target.value)}
-          />
+          {/* עטיפת אייקון Briefcase + שדה קלט */}
+          <div className="input-icon-wrap">
+            <Briefcase size={16} strokeWidth={2} />
+            <input
+              type="text"
+              placeholder="e.g. Frontend Developer, Junior AI Engineer"
+              value={jobTitle}
+              onChange={e => setJobTitle(e.target.value)}
+            />
+          </div>
 
           <button
             type="submit"

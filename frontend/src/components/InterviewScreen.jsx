@@ -1,6 +1,7 @@
 // InterviewScreen.jsx — מסך הצ'אט הראשי
 // מציג היסטוריית הודעות + input לתשובות המועמד
 import { useState, useEffect, useRef } from 'react'
+import { User, Briefcase, MessageSquare, Send } from 'lucide-react'
 import ChatBubble from './ChatBubble'
 
 export default function InterviewScreen({ messages, persona, state, onSend }) {
@@ -29,51 +30,67 @@ export default function InterviewScreen({ messages, persona, state, onSend }) {
   const total = 8  // לפי question_flow ברירת מחדל
 
   return (
-    <div className="interview-screen">
+    // wrapper מלא-רוחב עם רקע לבנדר-כהה
+    <div className="interview-wrapper">
+      <div className="interview-screen">
 
-      {/* ── header ── */}
-      <div className="interview-header">
-        <div className="interviewer-info">
-          <span className="interviewer-name">🤵 {persona?.name}</span>
-          <span className="interviewer-title">{persona?.title} · {persona?.company_name}</span>
-        </div>
-        <div className="progress">
-          Question {Math.min(asked + 1, total)} / {total}
-        </div>
-      </div>
-
-      {/* ── רשימת הודעות ── */}
-      <div className="messages-list">
-        {messages.map((msg, i) => (
-          <ChatBubble key={i} role={msg.role} content={msg.content} />
-        ))}
-        {/* ספינר בזמן המתנה לתגובת המראיין */}
-        {busy && (
-          <div className="bubble-row left">
-            <div className="avatar">🤵</div>
-            <div className="bubble bubble-interviewer typing">
-              <span /><span /><span />
-            </div>
+        {/* ── header ── */}
+        <div className="interview-header">
+          <div className="interviewer-info">
+            {/* User icon ליד שם המראיין */}
+            <span className="interviewer-name">
+              <User size={15} strokeWidth={2} />
+              {persona?.name}
+            </span>
+            {/* Briefcase icon ליד תפקיד + חברה */}
+            <span className="interviewer-title">
+              <Briefcase size={13} strokeWidth={2} />
+              {persona?.title} · {persona?.company_name}
+            </span>
           </div>
-        )}
-        <div ref={bottomRef} />
+          {/* MessageSquare icon ליד מונה השאלות */}
+          <div className="progress">
+            <MessageSquare size={13} strokeWidth={2} />
+            Question {Math.min(asked + 1, total)} / {total}
+          </div>
+        </div>
+
+        {/* ── רשימת הודעות ── */}
+        <div className="messages-list">
+          {messages.map((msg, i) => (
+            <ChatBubble key={i} role={msg.role} content={msg.content} />
+          ))}
+          {/* ספינר בזמן המתנה לתגובת המראיין */}
+          {busy && (
+            <div className="bubble-row left">
+              <div className="avatar">
+                <User size={18} strokeWidth={1.5} />
+              </div>
+              <div className="bubble bubble-interviewer typing">
+                <span /><span /><span />
+              </div>
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* ── input ── */}
+        <form className="input-row" onSubmit={handleSend}>
+          <input
+            type="text"
+            placeholder="Type your answer..."
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            disabled={busy}
+            autoFocus
+          />
+          {/* Send icon במקום טקסט "Send" */}
+          <button type="submit" className="btn-send" disabled={busy || !input.trim()}>
+            <Send size={16} strokeWidth={2} />
+          </button>
+        </form>
+
       </div>
-
-      {/* ── input ── */}
-      <form className="input-row" onSubmit={handleSend}>
-        <input
-          type="text"
-          placeholder="Type your answer..."
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          disabled={busy}
-          autoFocus
-        />
-        <button type="submit" className="btn-send" disabled={busy || !input.trim()}>
-          Send
-        </button>
-      </form>
-
     </div>
   )
 }
