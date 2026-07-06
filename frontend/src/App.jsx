@@ -99,19 +99,22 @@ export default function App() {
       const result = await api.sendTurn(userMessage, state, persona, jobTitle, language)
       setState(result.state)
       setMessages(prev => [...prev, { role: 'interviewer', content: result.message }])
-
-      if (result.is_complete) {
-        setScreen(SCREENS.LOADING)
-        setLoading(MESSAGES[language].analyzing)
-        try {
-          const fb = await api.getFeedback(result.state, persona, jobTitle, language)
-          setFeedback(fb)
-        } catch { setFeedback(null) }
-        setScreen(SCREENS.FEEDBACK)
-      }
+      // is_complete=True מגיע רק מ-_wrap_up — כאשר המשתמש כבר ענה על כל השאלות
+      // האפליקציה לא עוברת אוטומטית לפידבק — המשתמש לוחץ "View Results"
     } catch (err) {
       setMessages(prev => [...prev, { role: 'error', content: 'Error: ' + err.message }])
     }
+  }
+
+  // ── שלב 4: המשתמש לחץ "View Results" אחרי הודעת הסיום ──
+  async function handleViewResults() {
+    setScreen(SCREENS.LOADING)
+    setLoading(MESSAGES[language].analyzing)
+    try {
+      const fb = await api.getFeedback(state, persona, jobTitle, language)
+      setFeedback(fb)
+    } catch { setFeedback(null) }
+    setScreen(SCREENS.FEEDBACK)
   }
 
   function handleRestart() {
@@ -134,6 +137,7 @@ export default function App() {
           state={state}
           language={language}
           onSend={handleTurn}
+          onViewResults={handleViewResults}
         />
       )}
       {screen === SCREENS.FEEDBACK  && (

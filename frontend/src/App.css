@@ -323,6 +323,19 @@ body {
 .btn-send:hover:not(:disabled) { background: var(--accent-dk); }
 .btn-send:disabled { opacity: .45; cursor: not-allowed; }
 
+/* אזור "View Results" — מחליף את input-row אחרי סיום הראיון */
+.interview-done {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+}
+.interview-done .btn-primary {
+  margin-top: 0;
+  padding: 12px 32px;
+  font-size: 15px;
+}
+
 /* ── Feedback ── */
 .feedback-screen {
   flex: 1;

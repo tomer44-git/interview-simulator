@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { User, Briefcase, MessageSquare, Send } from 'lucide-react'
 import ChatBubble from './ChatBubble'
 
-export default function InterviewScreen({ messages, persona, state, language = 'en', onSend }) {
+export default function InterviewScreen({ messages, persona, state, language = 'en', onSend, onViewResults }) {
   const [input, setInput]   = useState('')
   const [busy,  setBusy]    = useState(false)  // true בזמן שממתינים לתגובת המראיין
   const bottomRef = useRef(null)
@@ -26,8 +26,9 @@ export default function InterviewScreen({ messages, persona, state, language = '
   }
 
   // חישוב התקדמות — מה מספר השאלות שנשאלו
-  const asked = state?.questions_asked ?? 0
-  const total = 8  // לפי question_flow ברירת מחדל
+  const asked      = state?.questions_asked ?? 0
+  const total      = 8
+  const isComplete = state?.is_complete ?? false  // המראיין שלח הודעת סיום — נועלים input
 
   return (
     // dir="rtl" כשהשפה עברית — מטפל בכל היישור והכיוון אוטומטית
@@ -74,21 +75,29 @@ export default function InterviewScreen({ messages, persona, state, language = '
           <div ref={bottomRef} />
         </div>
 
-        {/* ── input ── */}
-        <form className="input-row" onSubmit={handleSend}>
-          <input
-            type="text"
-            placeholder={language === 'he' ? 'כתוב את תשובתך...' : 'Type your answer...'}
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            disabled={busy}
-            autoFocus
-          />
-          {/* Send icon במקום טקסט "Send" */}
-          <button type="submit" className="btn-send" disabled={busy || !input.trim()}>
-            <Send size={16} strokeWidth={2} />
-          </button>
-        </form>
+        {/* ── input / view results ── */}
+        {isComplete ? (
+          // הראיון הסתיים — מציגים כפתור "View Results" במקום שדה הקלט
+          <div className="interview-done">
+            <button className="btn-primary" onClick={onViewResults}>
+              {language === 'he' ? 'צפה בתוצאות שלי ←' : 'View My Results →'}
+            </button>
+          </div>
+        ) : (
+          <form className="input-row" onSubmit={handleSend}>
+            <input
+              type="text"
+              placeholder={language === 'he' ? 'כתוב את תשובתך...' : 'Type your answer...'}
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              disabled={busy}
+              autoFocus
+            />
+            <button type="submit" className="btn-send" disabled={busy || !input.trim()}>
+              <Send size={16} strokeWidth={2} />
+            </button>
+          </form>
+        )}
 
       </div>
     </div>

@@ -83,7 +83,9 @@ Rules:
 
     state["history"].append({"role": "interviewer", "content": interviewer_reply})
     state["questions_asked"] += 1
-    state["is_complete"] = state["questions_asked"] >= total_questions
+    # is_complete נשאר False — המשתמש עדיין צריך לענות על השאלה האחרונה
+    # is_complete=True נקבע רק ב-_wrap_up, אחרי שהמשתמש ענה על כולן
+    state["is_complete"] = False
 
     return {"message": interviewer_reply, "state": state}
 
