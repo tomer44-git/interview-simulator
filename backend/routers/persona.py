@@ -1,6 +1,5 @@
 # routers/persona.py
 # POST /persona — מקבל נתוני מחקר ומחזיר פרסונת מראיין
-# route פשוט — אין Celery כאן, Claude API רץ ישירות
 
 import time
 from datetime import datetime
@@ -15,15 +14,13 @@ router = APIRouter()
 @router.post("/persona", response_model=PersonaResponse)
 def build_persona(req: PersonaRequest):
     """
-    מקבל: {"research": {...}, "job_title": "...", "language": "en"/"he"}
+    מקבל: {"research": {...}, "job_title": "...", "language": "en"/"he", "context_summary": "..."}
     מחזיר: {"persona": {...פרסונת המראיין...}}
     """
     try:
-        # [LATENCY] מדידת שלב הפרסונה
         _t = time.perf_counter()
         _ts = datetime.now().isoformat(timespec='milliseconds')
 
-        # ---- מוציא כל סוג מחקר מהdictionary + מעביר שפה ל-agent ----
         persona = persona_builder.run(
             company_data=req.research.get("company",   {}),
             glassdoor_data=req.research.get("glassdoor", {}),
@@ -31,6 +28,7 @@ def build_persona(req: PersonaRequest):
             news_data=req.research.get("news",      {}),
             neetcode_data=req.research.get("neetcode",  {}),
             language=req.language,
+            context_summary=req.context_summary,
         )
         _record("stage/persona", _ts, time.perf_counter() - _t)
     except Exception as e:

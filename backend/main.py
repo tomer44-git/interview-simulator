@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import research, persona, interview, feedback
+from routers import research, persona, interview, feedback, context
 
 # ---- יצירת ה-FastAPI app ----
 app = FastAPI(
@@ -45,6 +45,7 @@ app.add_middleware(
 # ---- מחבר את כל ה-routers ל-app ----
 # כל router מכיל קבוצת endpoints קשורים
 app.include_router(research.router,  tags=["Research"])
+app.include_router(context.router,   tags=["Context"])
 app.include_router(persona.router,   tags=["Persona"])
 app.include_router(interview.router, tags=["Interview"])
 app.include_router(feedback.router,  tags=["Feedback"])

@@ -25,10 +25,11 @@ def _clean(obj):
 
 def run(company_data: dict, glassdoor_data: dict,
         linkedin_data: dict, news_data: dict,
-        neetcode_data: dict = None, language: str = "en") -> dict:
+        neetcode_data: dict = None, language: str = "en",
+        context_summary: str = "") -> dict:
     """
-    בונה פרסונת מראיין. neetcode_data אופציונלי.
-    language: "en" לאנגלית, "he" לעברית — קובע את שפת הפרסונה.
+    בונה פרסונת מראיין. neetcode_data ו-context_summary אופציונליים.
+    context_summary — סיכום תהליך הגיוס עד כה, מוזרק לפרומפט אם קיים.
     """
 
     # מנקה את כל הנתונים מTavily לפני שמשתמשים בהם —
@@ -65,13 +66,22 @@ def run(company_data: dict, glassdoor_data: dict,
     # הוראת שפה — שורה אחת שמספיקה לגרום ל-Claude לדבר בשפה הנכונה
     lang_instruction = "\nIMPORTANT: Generate ALL text fields in Hebrew." if language == "he" else ""
 
+    # קונטקסט תהליך הגיוס — מוזרק לפרומפט רק אם סופק
+    context_block = ""
+    if context_summary.strip():
+        context_block = f"""
+
+=== CANDIDATE'S INTERVIEW HISTORY (use this to tailor questions) ===
+{context_summary}
+===================================================================="""
+
     prompt = f"""You are an expert at creating realistic job interview simulations.
 
 Based on this company research, create a realistic interviewer persona.{coding_instruction}{lang_instruction}
 
 === RESEARCH DATA ===
 {research_summary}
-====================
+===================={context_block}
 
 Create a persona for someone who would interview a candidate for: {company_data['job_title']} at {company_data['company_name']}
 

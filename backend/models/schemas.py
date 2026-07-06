@@ -23,10 +23,11 @@ class ResearchResponse(BaseModel):
 
 # ── /persona ───────────────────────────────────────────
 class PersonaRequest(BaseModel):
-    # מקבל את כל נתוני המחקר + שם התפקיד + שפה ("en" / "he")
-    research:  dict
-    job_title: str
-    language:  str = "en"
+    # מקבל את כל נתוני המחקר + שם התפקיד + שפה + סיכום קונטקסט (אופציונלי)
+    research:         dict
+    job_title:        str
+    language:         str = "en"
+    context_summary:  str = ""  # ריק אם המשתמש דילג על שלב הקונטקסט
 
 class PersonaResponse(BaseModel):
     # מחזיר את הפרסונה שנבנתה

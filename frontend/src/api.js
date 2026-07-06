@@ -19,13 +19,28 @@ async function post(path, body) {
 }
 
 // מריץ את כל 6 ה-research agents במקביל דרך Celery
-// language לא נדרש כאן — המחקר הוא אנגלי תמיד (תוכן מהאינטרנט)
 export const runResearch = (company, jobTitle) =>
   post('/research', { company, job_title: jobTitle })
 
-// בונה פרסונת מראיין — language קובע את שפת הפרסונה
-export const buildPersona = (research, jobTitle, language = 'en') =>
-  post('/persona', { research, job_title: jobTitle, language })
+// שולח טקסט + קבצים ל-context agent — מחזיר context_summary
+// משתמש ב-FormData כי יש קבצים בינאריים
+export async function sendContext(text, files) {
+  const formData = new FormData()
+  formData.append('text', text)
+  for (const file of files) {
+    formData.append('files', file)
+  }
+  const res = await fetch(`${BASE}/context`, { method: 'POST', body: formData })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }))
+    throw new Error(err.detail || 'Context request failed')
+  }
+  return res.json()  // { context_summary: "..." }
+}
+
+// בונה פרסונת מראיין — language + context_summary
+export const buildPersona = (research, jobTitle, language = 'en', contextSummary = '') =>
+  post('/persona', { research, job_title: jobTitle, language, context_summary: contextSummary })
 
 // פותח ראיון חדש — language זורם לagent כדי להגדיר שפת שיחה
 export const startInterview = (persona, jobTitle, language = 'en') =>

@@ -1,27 +1,34 @@
 // App.jsx — state מרכזי + ניווט בין מסכים
-// כל ה-data חי כאן ומועבר למסכים כ-props
 import { useState } from 'react'
 import LandingPage     from './components/LandingPage'
+import ContextScreen   from './components/ContextScreen'
 import LoadingScreen   from './components/LoadingScreen'
 import InterviewScreen from './components/InterviewScreen'
 import FeedbackScreen  from './components/FeedbackScreen'
 import * as api from './api'
 
-const SCREENS = { LANDING: 'landing', LOADING: 'loading', INTERVIEW: 'interview', FEEDBACK: 'feedback' }
+const SCREENS = {
+  LANDING:  'landing',
+  CONTEXT:  'context',   // שלב חדש — קונטקסט תהליך הגיוס
+  LOADING:  'loading',
+  INTERVIEW:'interview',
+  FEEDBACK: 'feedback',
+}
 
-// הודעות loading בשתי שפות
 const MESSAGES = {
   en: {
-    research:  (company) => `Researching ${company} across the web...`,
-    persona:   'Building your interviewer persona...',
-    starting:  'Starting your interview...',
-    analyzing: 'Analyzing your interview performance...',
+    context:  'Processing your interview history...',
+    research: (c) => `Researching ${c} across the web...`,
+    persona:  'Building your interviewer persona...',
+    starting: 'Starting your interview...',
+    analyzing:'Analyzing your interview performance...',
   },
   he: {
-    research:  (company) => `חוקר את ${company} ברשת...`,
-    persona:   'בונה את פרסונת המראיין שלך...',
-    starting:  'מתחיל את הריאיון...',
-    analyzing: 'מנתח את הביצועים שלך...',
+    context:  'מעבד את היסטוריית הראיונות שלך...',
+    research: (c) => `חוקר את ${c} ברשת...`,
+    persona:  'בונה את פרסונת המראיין שלך...',
+    starting: 'מתחיל את הריאיון...',
+    analyzing:'מנתח את הביצועים שלך...',
   },
 }
 
@@ -29,29 +36,45 @@ export default function App() {
   const [screen,   setScreen]   = useState(SCREENS.LANDING)
   const [persona,  setPersona]  = useState(null)
   const [jobTitle, setJobTitle] = useState('')
-  const [language, setLanguage] = useState('en')  // שפת הראיון — זורמת לכל ה-pipeline
+  const [company,  setCompany]  = useState('')
+  const [language, setLanguage] = useState('en')
   const [state,    setState]    = useState(null)
   const [messages, setMessages] = useState([])
   const [loading,  setLoading]  = useState('')
   const [feedback, setFeedback] = useState(null)
 
-  // ── מופעל כשהמשתמש שולח את הטופס ב-LandingPage ──
-  async function handleStart(company, jobTitleInput, lang) {
+  // ── שלב 1: LandingPage → שומר נתונים ועובר לContextScreen ──
+  function handleStart(companyInput, jobTitleInput, lang) {
+    setCompany(companyInput)
     setJobTitle(jobTitleInput)
     setLanguage(lang)
-    setScreen(SCREENS.LOADING)
+    setScreen(SCREENS.CONTEXT)
+  }
 
-    const msg = MESSAGES[lang]
+  // ── שלב 2: ContextScreen → מריץ את כל ה-pipeline ──
+  async function handleContextSubmit(contextText, contextFiles) {
+    setScreen(SCREENS.LOADING)
+    const msg = MESSAGES[language]
 
     try {
+      // שלב קונטקסט — אופציונלי, רק אם יש תוכן
+      let contextSummary = ''
+      if (contextText.trim() || contextFiles.length > 0) {
+        setLoading(msg.context)
+        const ctxResult = await api.sendContext(contextText, contextFiles)
+        contextSummary = ctxResult.context_summary || ''
+      }
+
       setLoading(msg.research(company))
-      const research = await api.runResearch(company, jobTitleInput)
+      const research = await api.runResearch(company, jobTitle)
 
       setLoading(msg.persona)
-      const { persona: builtPersona } = await api.buildPersona(research, jobTitleInput, lang)
+      const { persona: builtPersona } = await api.buildPersona(
+        research, jobTitle, language, contextSummary
+      )
 
       setLoading(msg.starting)
-      const startResult = await api.startInterview(builtPersona, jobTitleInput, lang)
+      const startResult = await api.startInterview(builtPersona, jobTitle, language)
 
       setPersona(builtPersona)
       setState(startResult.state)
@@ -64,10 +87,14 @@ export default function App() {
     }
   }
 
-  // ── מופעל בכל תשובה של המועמד ──
+  // דילוג על שלב הקונטקסט — מריץ pipeline ללא context
+  function handleContextSkip() {
+    handleContextSubmit('', [])
+  }
+
+  // ── שלב 3: כל תור בראיון ──
   async function handleTurn(userMessage) {
     setMessages(prev => [...prev, { role: 'candidate', content: userMessage }])
-
     try {
       const result = await api.sendTurn(userMessage, state, persona, jobTitle, language)
       setState(result.state)
@@ -79,12 +106,9 @@ export default function App() {
         try {
           const fb = await api.getFeedback(result.state, persona, jobTitle, language)
           setFeedback(fb)
-        } catch {
-          setFeedback(null)
-        }
+        } catch { setFeedback(null) }
         setScreen(SCREENS.FEEDBACK)
       }
-
     } catch (err) {
       setMessages(prev => [...prev, { role: 'error', content: 'Error: ' + err.message }])
     }
@@ -93,12 +117,15 @@ export default function App() {
   function handleRestart() {
     setScreen(SCREENS.LANDING)
     setPersona(null); setState(null); setMessages([])
-    setJobTitle(''); setFeedback(null); setLanguage('en')
+    setJobTitle(''); setCompany(''); setFeedback(null); setLanguage('en')
   }
 
   return (
     <div className="app">
       {screen === SCREENS.LANDING   && <LandingPage onStart={handleStart} />}
+      {screen === SCREENS.CONTEXT   && (
+        <ContextScreen onSubmit={handleContextSubmit} onSkip={handleContextSkip} />
+      )}
       {screen === SCREENS.LOADING   && <LoadingScreen message={loading} />}
       {screen === SCREENS.INTERVIEW && (
         <InterviewScreen
@@ -110,11 +137,7 @@ export default function App() {
         />
       )}
       {screen === SCREENS.FEEDBACK  && (
-        <FeedbackScreen
-          feedback={feedback}
-          persona={persona}
-          onRestart={handleRestart}
-        />
+        <FeedbackScreen feedback={feedback} persona={persona} onRestart={handleRestart} />
       )}
     </div>
   )
