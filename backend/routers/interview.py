@@ -4,7 +4,8 @@
 
 import time
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from auth import get_current_user
 from models.schemas import (
     InterviewStartRequest, InterviewStartResponse,
     InterviewTurnRequest,  InterviewTurnResponse,
@@ -17,7 +18,7 @@ router = APIRouter()
 
 
 @router.post("/interview/start", response_model=InterviewStartResponse)
-def start_interview(req: InterviewStartRequest):
+def start_interview(req: InterviewStartRequest, _user=Depends(get_current_user)):
     """
     מקבל: {"persona": {...}, "job_title": "Frontend Developer"}
     מחזיר: {"message": "Hi, I'm David...", "state": {...}}
@@ -41,7 +42,7 @@ def start_interview(req: InterviewStartRequest):
 
 
 @router.post("/interview/turn", response_model=InterviewTurnResponse)
-def interview_turn(req: InterviewTurnRequest):
+def interview_turn(req: InterviewTurnRequest, _user=Depends(get_current_user)):
     """
     מקבל: {"user_message": "...", "state": {...}, "persona": {...}, "job_title": "..."}
     מחזיר: {"message": "...", "state": {...}, "is_complete": false}

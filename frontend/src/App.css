@@ -98,6 +98,64 @@ body {
 .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
 .hint { margin-top: 16px; color: var(--fg-dim); font-size: 12px; text-align: center; }
 
+/* ── Auth ── */
+.auth-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 48px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.auth-title    { font-size: 26px; font-weight: 700; }
+.auth-subtitle { color: var(--fg-dim); font-size: 13px; margin-top: -8px; margin-bottom: 4px; }
+
+.auth-tabs {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.auth-tab {
+  flex: 1;
+  padding: 9px;
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+}
+.auth-tab--active { background: var(--accent); color: #fff; }
+
+.auth-error   { font-size: 13px; color: var(--error); }
+.auth-success { font-size: 13px; color: var(--green); line-height: 1.5; }
+
+/* כפתור Sign out — קטן ועדין בתחתית כרטיס הבית */
+.btn-signout {
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 4px;
+  text-align: center;
+  text-decoration: underline;
+  opacity: .7;
+}
+.btn-signout:hover { opacity: 1; color: var(--error); }
+
 /* ── Context ── */
 .context-page {
   flex: 1;

@@ -3,8 +3,9 @@
 # מחכה לכל התוצאות ומחזיר אותן יחד
 
 import time
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from celery import group
+from auth import get_current_user
 
 from models.schemas import ResearchRequest, ResearchResponse
 from tasks.research_tasks import AGENT_TASK_MAP
@@ -15,7 +16,7 @@ router = APIRouter()
 
 
 @router.post("/research", response_model=ResearchResponse)
-def research(req: ResearchRequest):
+def research(req: ResearchRequest, _user=Depends(get_current_user)):
     """
     מקבל: {"company": "Wix", "job_title": "Frontend Developer"}
     מחזיר: תוצאות כל 6 ה-agents

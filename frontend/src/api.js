@@ -4,11 +4,18 @@
 
 const BASE = import.meta.env.VITE_API_URL || '/api'
 
-// שולח POST ומחזיר JSON — פונקציה פנימית משותפת
+// ה-JWT token של המשתמש המחובר — מוגדר ע"י App.jsx מיד אחרי login
+let _token = null
+export function setAuthToken(token) { _token = token }
+
+// שולח POST ומחזיר JSON — מוסיף Authorization header אוטומטית
 async function post(path, body) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (_token) headers['Authorization'] = `Bearer ${_token}`
+
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(body),
   })
   if (!res.ok) {
@@ -30,7 +37,11 @@ export async function sendContext(text, files) {
   for (const file of files) {
     formData.append('files', file)
   }
-  const res = await fetch(`${BASE}/context`, { method: 'POST', body: formData })
+  // גם כאן מוסיפים את ה-token — FormData לא מקבל Content-Type ידני
+  const headers = {}
+  if (_token) headers['Authorization'] = `Bearer ${_token}`
+
+  const res = await fetch(`${BASE}/context`, { method: 'POST', body: formData, headers })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
     throw new Error(err.detail || 'Context request failed')

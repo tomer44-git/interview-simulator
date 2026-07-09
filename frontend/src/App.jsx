@@ -1,6 +1,9 @@
 // App.jsx — state מרכזי + ניווט בין מסכים
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase }     from './supabase'
+import { setAuthToken } from './api'
 import LandingPage     from './components/LandingPage'
+import AuthScreen      from './components/AuthScreen'
 import ContextScreen   from './components/ContextScreen'
 import LoadingScreen   from './components/LoadingScreen'
 import InterviewScreen from './components/InterviewScreen'
@@ -9,7 +12,7 @@ import * as api from './api'
 
 const SCREENS = {
   LANDING:  'landing',
-  CONTEXT:  'context',   // שלב חדש — קונטקסט תהליך הגיוס
+  CONTEXT:  'context',
   LOADING:  'loading',
   INTERVIEW:'interview',
   FEEDBACK: 'feedback',
@@ -33,6 +36,11 @@ const MESSAGES = {
 }
 
 export default function App() {
+  // ── Auth state ──
+  const [session,     setSession]     = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)  // true בזמן בדיקת session קיים
+
+  // ── Interview state ──
   const [screen,   setScreen]   = useState(SCREENS.LANDING)
   const [persona,  setPersona]  = useState(null)
   const [jobTitle, setJobTitle] = useState('')
@@ -42,6 +50,30 @@ export default function App() {
   const [messages, setMessages] = useState([])
   const [loading,  setLoading]  = useState('')
   const [feedback, setFeedback] = useState(null)
+
+  // ── בדיקת session בטעינה + האזנה לשינויים ──
+  useEffect(() => {
+    // בודק אם יש session שמור (ממש בטעינה הראשונה)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session) setAuthToken(session.access_token)
+      setAuthLoading(false)
+    })
+
+    // מאזין לLogin / Logout — מעדכן session ו-token אוטומטית
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setSession(session)
+      setAuthToken(session?.access_token ?? null)
+    })
+
+    // ניקוי listener כשהקומפוננטה מתפרקת
+    return () => subscription.unsubscribe()
+  }, [])
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    handleRestart()
+  }
 
   // ── שלב 1: LandingPage → שומר נתונים ועובר לContextScreen ──
   function handleStart(companyInput, jobTitleInput, lang) {
@@ -57,7 +89,6 @@ export default function App() {
     const msg = MESSAGES[language]
 
     try {
-      // שלב קונטקסט — אופציונלי, רק אם יש תוכן
       let contextSummary = ''
       if (contextText.trim() || contextFiles.length > 0) {
         setLoading(msg.context)
@@ -87,7 +118,6 @@ export default function App() {
     }
   }
 
-  // דילוג על שלב הקונטקסט — מריץ pipeline ללא context
   function handleContextSkip() {
     handleContextSubmit('', [])
   }
@@ -99,8 +129,6 @@ export default function App() {
       const result = await api.sendTurn(userMessage, state, persona, jobTitle, language)
       setState(result.state)
       setMessages(prev => [...prev, { role: 'interviewer', content: result.message }])
-      // is_complete=True מגיע רק מ-_wrap_up — כאשר המשתמש כבר ענה על כל השאלות
-      // האפליקציה לא עוברת אוטומטית לפידבק — המשתמש לוחץ "View Results"
     } catch (err) {
       setMessages(prev => [...prev, { role: 'error', content: 'Error: ' + err.message }])
     }
@@ -123,9 +151,17 @@ export default function App() {
     setJobTitle(''); setCompany(''); setFeedback(null); setLanguage('en')
   }
 
+  // ── בזמן בדיקת session ── (מניעת ריצוד עם AuthScreen)
+  if (authLoading) return <div className="app"><LoadingScreen message="Loading..." /></div>
+
+  // ── לא מחובר → מסך Login/Register ──
+  if (!session) return <div className="app"><AuthScreen /></div>
+
   return (
     <div className="app">
-      {screen === SCREENS.LANDING   && <LandingPage onStart={handleStart} />}
+      {screen === SCREENS.LANDING   && (
+        <LandingPage onStart={handleStart} onSignOut={handleSignOut} />
+      )}
       {screen === SCREENS.CONTEXT   && (
         <ContextScreen onSubmit={handleContextSubmit} onSkip={handleContextSkip} />
       )}

@@ -3,7 +3,8 @@
 
 import time
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from auth import get_current_user
 from models.schemas import FeedbackRequest, FeedbackResponse
 from agents import feedback_agent
 from domains import domain_loader
@@ -14,7 +15,7 @@ router = APIRouter()
 
 
 @router.post("/feedback", response_model=FeedbackResponse)
-def feedback(req: FeedbackRequest):
+def feedback(req: FeedbackRequest, _user=Depends(get_current_user)):
     """
     מקבל: {"state": {...}, "persona": {...}, "job_title": "..."}
     מחזיר: ציונים מפורטים לפי קטגוריה + סיכום + משאבים מומלצים

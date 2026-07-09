@@ -3,7 +3,8 @@
 
 import time
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from auth import get_current_user
 from models.schemas import PersonaRequest, PersonaResponse
 from agents import persona_builder
 from latency import _record
@@ -12,7 +13,7 @@ router = APIRouter()
 
 
 @router.post("/persona", response_model=PersonaResponse)
-def build_persona(req: PersonaRequest):
+def build_persona(req: PersonaRequest, _user=Depends(get_current_user)):
     """
     מקבל: {"research": {...}, "job_title": "...", "language": "en"/"he", "context_summary": "..."}
     מחזיר: {"persona": {...פרסונת המראיין...}}

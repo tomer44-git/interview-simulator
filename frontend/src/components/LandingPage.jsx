@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Building2, Briefcase } from 'lucide-react'
 
-export default function LandingPage({ onStart }) {
+export default function LandingPage({ onStart, onSignOut }) {
   const [company,  setCompany]  = useState('')
   const [jobTitle, setJobTitle] = useState('')
   const [language, setLanguage] = useState('en')  // "en" או "he"
@@ -70,6 +70,7 @@ export default function LandingPage({ onStart }) {
         </form>
 
         <p className="hint">Research takes ~20 seconds. The wait is worth it.</p>
+        <button className="btn-signout" onClick={onSignOut}>Sign out</button>
       </div>
     </div>
   )

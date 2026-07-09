@@ -3,7 +3,8 @@
 # משתמש ב-multipart/form-data כי מעביר קבצים בינאריים
 
 import io
-from fastapi import APIRouter, File, Form, UploadFile, HTTPException
+from fastapi import APIRouter, File, Form, UploadFile, HTTPException, Depends
+from auth import get_current_user
 from agents import context_agent
 
 router = APIRouter()
@@ -35,6 +36,7 @@ def _extract_docx(data: bytes) -> str:
 async def process_context(
     text:  str              = Form(default=""),
     files: list[UploadFile] = File(default=[]),
+    _user=Depends(get_current_user),
 ):
     """
     מקבל: multipart form עם text (חופשי) + files (PDF/Word, אופציונלי)
