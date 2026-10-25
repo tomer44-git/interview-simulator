@@ -101,20 +101,27 @@ def _get_current_category(questions_asked: int, question_flow: list) -> str:
 
 
 def _wrap_up(state: dict, persona: dict, language: str = "en") -> dict:
-    """מסיים את הראיון — משפט הסיום בשפה הנכונה"""
+    """
+    מסיים את הראיון — משפט הסיום בשפה הנכונה.
+
+    חשוב: הטקסט הזה חייב להיות הצהרה סוגרת ולא שאלה.
+    מיד אחריו הפרונט נועל את תיבת הקלט ומציג כפתור תוצאות, אז אם ההודעה
+    מסתיימת בשאלה ("יש לך שאלות אליי?") המשתמש מרגיש שנשאל ונחסם מלענות.
+    """
     if language == "he":
         closing = (
-            f"תודה רבה על הזמן שהקדשת היום. "
-            f"שמחתי להכיר אותך. "
-            f"ניצור קשר בקרוב עם הצעדים הבאים. "
-            f"האם יש לך שאלות לגבי התפקיד או {persona['company_name']}?"
+            f"תודה רבה על הזמן שהקדשת היום — שמחתי להכיר אותך ולשמוע על הניסיון שלך. "
+            f"בזאת מסתיים הראיון שלנו ב{persona['company_name']}. "
+            f"מחכה לך עכשיו משוב מפורט על הביצועים: ציונים לפי קטגוריה, "
+            f"נקודות החוזק שלך, ותחומים שכדאי לחזק."
         )
     else:
         closing = (
-            f"Thank you so much for your time today. "
-            f"It was great getting to know you. "
-            f"We'll be in touch soon with next steps. "
-            f"Do you have any questions for me about the role or {persona['company_name']}?"
+            f"Thank you for your time today — it was a pleasure getting to know you "
+            f"and hearing about your experience. "
+            f"That brings our interview at {persona['company_name']} to a close. "
+            f"A detailed breakdown of your performance is waiting for you: "
+            f"category scores, your key strengths, and areas to work on."
         )
     state["history"].append({"role": "interviewer", "content": closing})
     state["is_complete"] = True

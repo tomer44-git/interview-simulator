@@ -1,6 +1,11 @@
 # מפתחות — אף פעם לא מעלים לGitHub
 .env
 
+# משתני סביבה מקומיים — Vite טוען אותם בפיתוח, הם לא שייכים ל-repo
+# מכסה גם frontend/.env.local וגם וריאנטים כמו .env.production.local
+.env.local
+.env.*.local
+
 # Python
 venv/
 __pycache__/
