@@ -2,7 +2,21 @@
 # מגדיר את ה-Celery instance — מנהל המשימות המקבילות
 # Redis משמש כ-broker (תור המשימות) וכ-backend (אחסון תוצאות)
 
+import sys
 import os
+
+# מבטיח UTF-8 על stdout ו-stderr לפני כל import — חייב להיות ראשון.
+#
+# זו אותה הגנה שקיימת ב-main.py, והיא נדרשת כאן באותה מידה:
+# ה-worker מריץ את סוכני המחקר, שהערות הקוד שלהם בעברית. אם סוכן
+# זורק חריגה, Celery כותב traceback שכולל את שורות המקור האלה —
+# וכתיבתו ל-stdout של Railway (ASCII כברירת מחדל) קורסת בעצמה,
+# ומסתירה את השגיאה המקורית. זה הדפוס שעלה שבעה commits ב-d626234.
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 from celery import Celery
 from dotenv import load_dotenv
 

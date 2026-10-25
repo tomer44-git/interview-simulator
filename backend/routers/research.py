@@ -1,14 +1,18 @@
 # routers/research.py
-# POST /research — מריץ את כל ה-research agents במקביל דרך Celery
-# מחכה לכל התוצאות ומחזיר אותן יחד
+# POST /research — מריץ את סוכני המחקר ומחזיר את התוצאות
+#
+# ה-router אחראי על HTTP בלבד: אימות, תרגום שגיאות, מדידת שלב, ועיצוב
+# התשובה. התיזמור עצמו — בניית ה-group, ההמתנה, שיוך התוצאות —
+# יושב ב-agents/orchestrator.py.
 
 import time
-from fastapi import APIRouter, HTTPException, Depends
-from celery import group
-from auth import get_current_user
+from datetime import datetime
 
+from fastapi import APIRouter, HTTPException, Depends
+
+from auth import get_current_user
 from models.schemas import ResearchRequest, ResearchResponse
-from tasks.research_tasks import AGENT_TASK_MAP
+from agents import orchestrator
 from domains import domain_loader
 from latency import _record, clear_measurements, print_research_summary
 
@@ -19,56 +23,31 @@ router = APIRouter()
 def research(req: ResearchRequest, _user=Depends(get_current_user)):
     """
     מקבל: {"company": "Wix", "job_title": "Frontend Developer"}
-    מחזיר: תוצאות כל 6 ה-agents
-
-    השלבים:
-    1. טוען domain_config לפי job_title → יודע אילו agents להריץ
-    2. בונה group של Celery tasks — כולם יוזנקו במקביל
-    3. מחכה לכולם (עד 120 שניות)
-    4. מרכיב את התוצאות ומחזיר
+    מחזיר: תוצאות כל סוכני המחקר של הדומיין
     """
-    # [LATENCY] מאפס מדידות ומתחיל מדידת שלב research
+    # [LATENCY] מאפס מדידות ומתחיל מדידת שלב
     clear_measurements()
     _t_stage = time.perf_counter()
-    from datetime import datetime as _dt
-    _ts_stage = _dt.now().isoformat(timespec='milliseconds')
+    _ts_stage = datetime.now().isoformat(timespec="milliseconds")
 
-    # ---- 1. אילו agents מריצים לתפקיד הזה? ----
-    domain_config    = domain_loader.load(req.job_title)
-    agents_to_run    = domain_config["research_agents"]  # למשל: ["company","glassdoor",...]
-
-    # ---- 2. בונה רשימת Celery tasks למקביליות ----
-    # .s() = "signature" — מכין את הtask עם הארגומנטים בלי להריץ עדיין
-    tasks = [
-        AGENT_TASK_MAP[agent_name].s(req.company, req.job_title)
-        for agent_name in agents_to_run
-        if agent_name in AGENT_TASK_MAP
-    ]
+    # ה-config קובע אילו סוכנים רצים לתפקיד הזה
+    domain_config = domain_loader.load(req.job_title)
 
     try:
-        # ---- 3. מזניק את כולם במקביל ומחכה לתוצאות ----
-        # group() = "הרץ את כל אלה במקביל"
-        # .apply_async() = שלח לRedis
-        # .get(timeout=120) = חכה לכולם, עד 120 שניות
-        results_list = group(tasks).apply_async().get(timeout=120)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Research failed: {str(e)}")
+        outcome = orchestrator.run_research(req.company, req.job_title, domain_config)
+    except orchestrator.OrchestrationError as exc:
+        # תרגום שגיאת תיזמור לשגיאת HTTP — הגבול בין השכבות
+        raise HTTPException(status_code=500, detail=f"Research failed: {exc}")
 
-    # ---- 4. ממפה תוצאות לשמות ה-agents ----
-    results = dict(zip(agents_to_run, results_list))
+    results = outcome["results"]
 
-    # [LATENCY] חולץ timing מכל agent ומדפיס טבלת השוואת מקביליות
-    agent_timings = []
-    for name in agents_to_run:
-        t = results[name].pop("_timing", None)  # מסיר _timing לפני הסריאליזציה
-        if t:
-            agent_timings.append(t)
+    # [LATENCY] רושם את זמן השלב ומדפיס טבלת השוואת מקביליות
     stage_duration = time.perf_counter() - _t_stage
     _record("stage/research", _ts_stage, stage_duration)
-    if agent_timings:
-        print_research_summary(stage_duration, agent_timings)
+    if outcome["timings"]:
+        print_research_summary(stage_duration, outcome["timings"])
 
-    # מוודא שכל שדה קיים (agents שלא רצו = dict ריק)
+    # סוכן שלא רץ לדומיין הזה מוחזר כ-dict ריק
     return ResearchResponse(
         company=results.get("company",   {}),
         glassdoor=results.get("glassdoor", {}),
