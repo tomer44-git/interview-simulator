@@ -9,6 +9,15 @@ Interviews run in English or Hebrew, with full RTL support.
 
 ---
 
+**[The problem](#the-problem)** ·
+**[Architecture](#architecture)** ·
+**[Design decisions](#design-decisions)** ·
+**[Running locally](#running-locally)** ·
+**[Tests](#tests)** ·
+**[Known limitations](#known-limitations)**
+
+---
+
 ## The problem
 
 Generic interview practice tools ask generic questions. Interviewing at Wix is
@@ -20,7 +29,49 @@ works there would.
 
 ---
 
-## How it works
+## Architecture
+
+### Deployed system
+
+```
+        Browser
+           │  JWT in every request
+           ▼
+   ┌───────────────┐         ┌──────────────────────────────┐
+   │    Vercel     │  HTTPS  │           Railway            │
+   │               │ ──────► │                              │
+   │  React + Vite │         │  ┌────────────────────────┐  │
+   └───────┬───────┘         │  │  FastAPI               │  │
+           │                 │  │  routers · auth        │  │
+           │                 │  └───────┬────────────────┘  │
+           │                 │          │ Celery group      │
+           │                 │          ▼                   │
+           │                 │  ┌────────────┐              │
+           │                 │  │   Redis    │              │
+           │                 │  │  broker +  │              │
+           │                 │  │  results   │              │
+           │                 │  └─────┬──────┘              │
+           │                 │        │                     │
+           │                 │  ┌─────▼──────────────────┐  │
+           │                 │  │  Celery worker         │  │
+           │                 │  │  6 research agents     │  │
+           │                 │  └─────┬──────────────────┘  │
+           │                 └────────┼─────────────────────┘
+           │                          │
+           │   auth                   │  search + generation
+           ▼                          ▼
+   ┌───────────────┐         ┌─────────────────┐
+   │   Supabase    │         │ Tavily · Claude │
+   │ Auth · Postgres│        └─────────────────┘
+   └───────────────┘
+```
+
+Three Railway services (FastAPI, Redis, Celery worker), plus Vercel for the
+frontend and Supabase for auth and session storage. The browser talks only to
+Vercel and Supabase; every call into the backend carries a Supabase JWT that
+FastAPI verifies before any route runs.
+
+### Request pipeline
 
 ```
    Company + Role
@@ -53,6 +104,28 @@ works there would.
 
 **Stack:** React 19 + Vite on Vercel · FastAPI + Celery + Redis on Railway ·
 Claude for generation · Tavily for search · Supabase for auth and storage.
+
+### Code map
+
+```
+backend/
+  agents/
+    orchestrator.py      dispatches the research group, maps results back
+    persona_builder.py   research → a named interviewer
+    interview_agent.py   stateless conversation engine
+    feedback_agent.py    transcript → per-category scores
+    context_agent.py     free text + PDF/Word → process summary
+    research/            the six agents that search the web
+  domains/               config-driven domain system — tech ×2, finance ×1
+  routers/               FastAPI endpoints, HTTP concerns only
+  tasks/                 Celery task wrappers + AGENT_TASK_MAP
+  tests/                 152 tests, fully mocked
+  e2e/                   manual pre-release run against real APIs
+frontend/src/            React app — landing, auth, context, interview, feedback
+```
+
+Routers hold no business logic. Agents know nothing about HTTP. The one place
+those meet is a single `except OrchestrationError` that becomes a 500.
 
 ---
 
@@ -142,7 +215,7 @@ Required keys: `ANTHROPIC_API_KEY`, `TAVILY_API_KEY`, `REDIS_URL`,
 cd backend && ./venv/bin/pytest
 ```
 
-127 tests, well under a second, no network. Every external API is mocked, and
+152 tests, well under a second, no network. Every external API is mocked, and
 an autouse fixture swaps all real keys for fakes — so a missed mock fails
 loudly instead of quietly spending money.
 
@@ -182,18 +255,3 @@ before a release.
 These are measured rather than guessed, and the reasoning for leaving each one
 is recorded in [CLAUDE.md](CLAUDE.md).
 
----
-
-## Repository
-
-```
-backend/
-  agents/      orchestrator, persona builder, interview engine,
-               feedback agent, context agent, 6 research agents
-  domains/     config-driven domain system
-  routers/     FastAPI endpoints
-  tasks/       Celery task wrappers
-  tests/       127 tests
-  e2e/         manual pre-release run against real APIs
-frontend/src/  React app — landing, auth, context, interview, feedback
-```

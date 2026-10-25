@@ -92,7 +92,7 @@ backend/
 │   └── finance/junior_analyst.py 64  non-tech domain, 4 agents, "Case Study"
 ├── routers/                         research, context, persona, interview, feedback
 ├── tasks/research_tasks.py     60   Celery task wrappers + AGENT_TASK_MAP
-├── tests/                   1,363   127 tests, fully mocked
+├── tests/                   1454   152 tests, fully mocked
 └── e2e/run_live_interview.py  116   manual pre-release check, real APIs
 
 frontend/src/                 1,279   App + 7 screens + api + supabase client
@@ -114,7 +114,7 @@ Frontend (Vercel): `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 ## Tests
 
 ```bash
-cd backend && ./venv/bin/pytest          # 127 tests, ~0.7s, no network
+cd backend && ./venv/bin/pytest          # 152 tests, ~0.7s, no network
 ```
 
 All external APIs are mocked. An autouse fixture replaces every real key
@@ -133,7 +133,7 @@ manual and deliberately not collected by pytest.
 | Hebrew interviews (full pipeline + RTL) | working |
 | Context agent (free text + PDF/Word) | working |
 | Supabase auth | working |
-| Test suite | 127 tests |
+| Test suite | 152 tests |
 | Multi-user: invites, attempt limits, admin | specced, not built — see [MULTI_USER_PLAN.md](MULTI_USER_PLAN.md) |
 
 ---
