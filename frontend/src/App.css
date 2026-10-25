@@ -239,6 +239,36 @@ body {
 }
 .file-remove:hover { color: var(--error); }
 
+/* אזהרה על קבצים שלא נקראו — המשתמש מחליט אם להמשיך בלעדיהם */
+.context-alert {
+  background: rgba(229, 165, 53, .09);
+  border: 1px solid rgba(229, 165, 53, .4);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.context-alert-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #b07d1a;
+}
+.context-alert-files {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  color: var(--fg);
+  padding-inline-start: 24px;
+}
+.context-alert-files li::before { content: "• "; color: #b07d1a; }
+.context-alert .btn-primary { margin-top: 2px; align-self: flex-start; padding: 9px 18px; font-size: 14px; }
+
 .context-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px; }
 .btn-skip {
   background: transparent;

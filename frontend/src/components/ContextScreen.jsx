@@ -1,9 +1,16 @@
 // ContextScreen.jsx — שלב אופציונלי: קונטקסט תהליך הגיוס + קבצים
 // מופיע בין LandingPage ל-Loading — המשתמש יכול לדלג
 import { useState, useRef } from 'react'
-import { FileText, Upload, X } from 'lucide-react'
+import { FileText, Upload, X, AlertTriangle } from 'lucide-react'
 
-export default function ContextScreen({ onSubmit, onSkip }) {
+export default function ContextScreen({
+  onSubmit,
+  onSkip,
+  warning,            // { skipped: [...], summary } או null
+  warningText,
+  continueText,
+  onContinueAnyway,
+}) {
   const [text,     setText]     = useState('')
   const [files,    setFiles]    = useState([])   // רשימת File objects
   const [dragging, setDragging] = useState(false)
@@ -88,6 +95,22 @@ export default function ContextScreen({ onSubmit, onSkip }) {
               </li>
             ))}
           </ul>
+        )}
+
+        {/* ── אזהרה על קבצים שה-backend לא הצליח לקרוא ── */}
+        {warning?.skipped?.length > 0 && (
+          <div className="context-alert">
+            <div className="context-alert-head">
+              <AlertTriangle size={16} strokeWidth={2} />
+              <span>{warningText}</span>
+            </div>
+            <ul className="context-alert-files">
+              {warning.skipped.map((name, i) => <li key={i}>{name}</li>)}
+            </ul>
+            <button className="btn-primary" onClick={onContinueAnyway}>
+              {continueText}
+            </button>
+          </div>
         )}
 
         {/* ── כפתורים ── */}

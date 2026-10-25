@@ -25,6 +25,8 @@ const MESSAGES = {
     persona:  'Building your interviewer persona...',
     starting: 'Starting your interview...',
     analyzing:'Analyzing your interview performance...',
+    skipped:  'These files could not be read and were left out:',
+    continue: 'Continue without them →',
   },
   he: {
     context:  'מעבד את היסטוריית הראיונות שלך...',
@@ -32,6 +34,8 @@ const MESSAGES = {
     persona:  'בונה את פרסונת המראיין שלך...',
     starting: 'מתחיל את הריאיון...',
     analyzing:'מנתח את הביצועים שלך...',
+    skipped:  'לא הצלחנו לקרוא את הקבצים הבאים והם לא נכללו:',
+    continue: 'המשך בלעדיהם →',
   },
 }
 
@@ -50,6 +54,8 @@ export default function App() {
   const [messages, setMessages] = useState([])
   const [loading,  setLoading]  = useState('')
   const [feedback, setFeedback] = useState(null)
+  // { skipped: [שמות קבצים], summary: "..." } כשקבצים לא נקראו
+  const [contextWarning, setContextWarning] = useState(null)
 
   // ── בדיקת session בטעינה + האזנה לשינויים ──
   useEffect(() => {
@@ -83,19 +89,13 @@ export default function App() {
     setScreen(SCREENS.CONTEXT)
   }
 
-  // ── שלב 2: ContextScreen → מריץ את כל ה-pipeline ──
-  async function handleContextSubmit(contextText, contextFiles) {
-    setScreen(SCREENS.LOADING)
+  // ── מחקר → פרסונה → פתיחת ראיון ──
+  // מופרד כי נקראים אליו משני מקומות: הגשה רגילה, והמשך אחרי אזהרת קבצים
+  async function runPipeline(contextSummary) {
     const msg = MESSAGES[language]
+    setScreen(SCREENS.LOADING)
 
     try {
-      let contextSummary = ''
-      if (contextText.trim() || contextFiles.length > 0) {
-        setLoading(msg.context)
-        const ctxResult = await api.sendContext(contextText, contextFiles)
-        contextSummary = ctxResult.context_summary || ''
-      }
-
       setLoading(msg.research(company))
       const research = await api.runResearch(company, jobTitle)
 
@@ -116,6 +116,45 @@ export default function App() {
       alert('Something went wrong: ' + err.message)
       setScreen(SCREENS.LANDING)
     }
+  }
+
+  // ── שלב 2: ContextScreen → מעבד קונטקסט ומריץ את ה-pipeline ──
+  async function handleContextSubmit(contextText, contextFiles) {
+    setScreen(SCREENS.LOADING)
+    setContextWarning(null)
+
+    try {
+      let contextSummary = ''
+      if (contextText.trim() || contextFiles.length > 0) {
+        setLoading(MESSAGES[language].context)
+        const ctxResult = await api.sendContext(contextText, contextFiles)
+        contextSummary = ctxResult.context_summary || ''
+
+        // קבצים שה-backend לא הצליח לקרוא — עוצרים ומיידעים.
+        // המשתמש העלה אותם כי רצה שיילקחו בחשבון; להמשיך בשקט
+        // יהפוך את הראיון לכזה שמתעלם מהם בלי שידע למה.
+        const skipped = ctxResult.skipped_files || []
+        if (skipped.length > 0) {
+          // שומרים את הסיכום כדי לא לשלם שוב על אותה קריאה אם ימשיך
+          setContextWarning({ skipped, summary: contextSummary })
+          setScreen(SCREENS.CONTEXT)
+          return
+        }
+      }
+
+      await runPipeline(contextSummary)
+
+    } catch (err) {
+      alert('Something went wrong: ' + err.message)
+      setScreen(SCREENS.LANDING)
+    }
+  }
+
+  // המשתמש בחר להמשיך למרות שקבצים דולגו — משתמשים בסיכום שכבר חושב
+  function handleContinueAnyway() {
+    const summary = contextWarning?.summary || ''
+    setContextWarning(null)
+    runPipeline(summary)
   }
 
   function handleContextSkip() {
@@ -163,7 +202,14 @@ export default function App() {
         <LandingPage onStart={handleStart} onSignOut={handleSignOut} />
       )}
       {screen === SCREENS.CONTEXT   && (
-        <ContextScreen onSubmit={handleContextSubmit} onSkip={handleContextSkip} />
+        <ContextScreen
+          onSubmit={handleContextSubmit}
+          onSkip={handleContextSkip}
+          warning={contextWarning}
+          warningText={MESSAGES[language].skipped}
+          continueText={MESSAGES[language].continue}
+          onContinueAnyway={handleContinueAnyway}
+        />
       )}
       {screen === SCREENS.LOADING   && <LoadingScreen message={loading} />}
       {screen === SCREENS.INTERVIEW && (
