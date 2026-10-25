@@ -4,8 +4,9 @@
 
 import time
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from auth import get_current_user
+from errors import server_error
 from models.schemas import (
     InterviewStartRequest, InterviewStartResponse,
     InterviewTurnRequest,  InterviewTurnResponse,
@@ -33,7 +34,7 @@ def start_interview(req: InterviewStartRequest, _user=Depends(get_current_user))
         # ---- פותח ראיון — מחזיר פתיחה + state ריק ----
         result = interview_agent.start(req.persona, domain_config, language=req.language)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Interview start failed: {str(e)}")
+        raise server_error("Interview start failed", e)
 
     return InterviewStartResponse(
         message=result["message"],
@@ -65,7 +66,7 @@ def interview_turn(req: InterviewTurnRequest, _user=Depends(get_current_user)):
         )
         _record("stage/interview_turn", _ts, time.perf_counter() - _t)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Interview turn failed: {str(e)}")
+        raise server_error("Interview turn failed", e)
 
     return InterviewTurnResponse(
         message=result["message"],

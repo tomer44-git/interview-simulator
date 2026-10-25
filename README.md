@@ -119,7 +119,7 @@ backend/
   domains/               config-driven domain system — tech ×2, finance ×1
   routers/               FastAPI endpoints, HTTP concerns only
   tasks/                 Celery task wrappers + AGENT_TASK_MAP
-  tests/                 152 tests, fully mocked
+  tests/                 166 tests, fully mocked
   e2e/                   manual pre-release run against real APIs
 frontend/src/            React app — landing, auth, context, interview, feedback
 ```
@@ -215,7 +215,7 @@ Required keys: `ANTHROPIC_API_KEY`, `TAVILY_API_KEY`, `REDIS_URL`,
 cd backend && ./venv/bin/pytest
 ```
 
-152 tests, well under a second, no network. Every external API is mocked, and
+166 tests, well under a second, no network. Every external API is mocked, and
 an autouse fixture swaps all real keys for fakes — so a missed mock fails
 loudly instead of quietly spending money.
 

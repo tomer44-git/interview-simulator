@@ -3,8 +3,9 @@
 
 import time
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from auth import get_current_user
+from errors import server_error
 from models.schemas import PersonaRequest, PersonaResponse
 from agents import persona_builder
 from latency import _record
@@ -33,6 +34,6 @@ def build_persona(req: PersonaRequest, _user=Depends(get_current_user)):
         )
         _record("stage/persona", _ts, time.perf_counter() - _t)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Persona build failed: {str(e)}")
+        raise server_error("Persona build failed", e)
 
     return PersonaResponse(persona=persona)

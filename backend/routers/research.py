@@ -8,9 +8,10 @@
 import time
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 
 from auth import get_current_user
+from errors import server_error
 from models.schemas import ResearchRequest, ResearchResponse
 from agents import orchestrator
 from domains import domain_loader
@@ -36,8 +37,9 @@ def research(req: ResearchRequest, _user=Depends(get_current_user)):
     try:
         outcome = orchestrator.run_research(req.company, req.job_title, domain_config)
     except orchestrator.OrchestrationError as exc:
-        # תרגום שגיאת תיזמור לשגיאת HTTP — הגבול בין השכבות
-        raise HTTPException(status_code=500, detail=f"Research failed: {exc}")
+        # תרגום שגיאת תיזמור לשגיאת HTTP — הגבול בין השכבות.
+        # ההודעה המלאה נרשמת בלוג; הלקוח מקבל מזהה בלבד.
+        raise server_error("Research failed", exc)
 
     results = outcome["results"]
 

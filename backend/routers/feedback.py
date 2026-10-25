@@ -3,8 +3,9 @@
 
 import time
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from auth import get_current_user
+from errors import server_error
 from models.schemas import FeedbackRequest, FeedbackResponse
 from agents import feedback_agent
 from domains import domain_loader
@@ -38,7 +39,7 @@ def feedback(req: FeedbackRequest, _user=Depends(get_current_user)):
         print_full_summary()  # [LATENCY] מדפיס טבלת סיכום בסוף כל pipeline מלא
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Feedback failed: {str(e)}")
+        raise server_error("Feedback failed", e)
 
     # ---- 3. שומר ל-Supabase (לא קריטי — לא קורס אם נכשל) ----
     client     = supabase_client.get_client()

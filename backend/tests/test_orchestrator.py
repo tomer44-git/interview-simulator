@@ -170,17 +170,23 @@ def test_original_error_is_preserved_as_the_cause(fake_group):
 
 # ------------------------------------------------- גבול ה-HTTP
 
-def test_router_translates_orchestration_error_to_500(api, monkeypatch):
-    """ה-router חייב לתרגם — לא לתת לחריגה לדלוף כ-500 גנרי של FastAPI"""
+def test_router_translates_orchestration_error_to_500(api, monkeypatch, caplog):
+    """
+    ה-router חייב לתפוס ולתרגם — לא לתת לחריגה לדלוף כ-500 גנרי של
+    FastAPI, וגם לא להעביר את הודעתה הגולמית ללקוח.
+    """
     def _boom(*args, **kwargs):
         raise orchestrator.OrchestrationError("workers unavailable")
 
     monkeypatch.setattr(orchestrator, "run_research", _boom)
 
-    res = api.post("/research", json={"company": "Wix", "job_title": "Frontend Developer"})
+    with caplog.at_level("ERROR", logger="interview_simulator"):
+        res = api.post("/research", json={"company": "Wix", "job_title": "Frontend Developer"})
 
     assert res.status_code == 500
-    assert "workers unavailable" in res.json()["detail"]
+    assert res.json()["detail"].startswith("Research failed (ref: ")
+    assert "workers unavailable" not in res.json()["detail"]   # לא ללקוח
+    assert "workers unavailable" in caplog.text                # כן ללוג
 
 
 def test_router_passes_the_domain_config_through(api, monkeypatch):
