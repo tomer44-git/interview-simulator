@@ -133,6 +133,35 @@ def test_categories_follow_the_configured_order(claude, persona, domain_config):
 
 # ------------------------------------------------- שפה ו-state
 
+def test_a_non_tech_domain_runs_on_the_same_engine(claude, persona):
+    """
+    ההוכחה שהארכיטקטורה עומדת בטענה שלה: ראיון פיננסי מלא עובר
+    במנוע שלא יודע שפיננסים קיימים, עם קטגוריות שלא מופיעות בשום
+    מקום בקוד ("Case Study") ועם ארבעה סוכני מחקר במקום שישה.
+    """
+    from domains import domain_loader
+
+    finance = domain_loader.load("Junior Financial Analyst")
+    claude.set_responses([f"Finance question {i}?" for i in range(1, 9)])
+
+    state = interview_agent.start(persona, finance)["state"]
+    seen = []
+    for i in range(1, 9):
+        state = interview_agent.next_turn(f"Answer {i}", state, persona, finance)["state"]
+        seen.append(state["current_category"])
+
+    assert seen == [
+        "HR", "HR",
+        "Behavioral", "Behavioral",
+        "Technical", "Technical",
+        "Case Study", "Case Study",
+    ]
+    assert state["is_complete"] is False     # אותה הגנה על השאלה האחרונה
+
+    closed = interview_agent.next_turn("Final answer.", state, persona, finance)
+    assert closed["state"]["is_complete"] is True
+
+
 def test_hebrew_instruction_reaches_the_system_prompt(claude, persona, domain_config):
     """בחירת השפה חייבת להגיע עד ל-system prompt, אחרת הראיון יהיה באנגלית"""
     state = interview_agent.start(persona, domain_config, language="he")["state"]

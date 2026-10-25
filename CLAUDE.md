@@ -60,6 +60,11 @@ every request, so instances can be added without sticky sessions.
 **Domain configs** define four things and nothing else is needed to add a
 sector: `question_flow`, `research_agents`, `persona_style`, `scoring_rubric`.
 
+Three domains ship: two tech, one finance. The finance config is the proof —
+it uses a category name no tech domain has (`Case Study`), runs four research
+agents instead of six, and weights its questions differently. The engines
+contain zero references to it.
+
 ---
 
 ## Project structure
@@ -82,9 +87,9 @@ backend/
 │   └── research/                    6 agents, 73–93 lines each
 ├── domains/
 │   ├── base_domain.py          66   REQUIRED_KEYS, validate(), TEMPLATE
-│   ├── domain_loader.py        54   job title → config
-│   ├── tech/                        frontend_developer, junior_ai_engineer
-│   └── finance/junior_analyst.py  0 ← STUB, not implemented
+│   ├── domain_loader.py        62   job title → config
+│   ├── tech/                        frontend_developer 53, junior_ai_engineer 54
+│   └── finance/junior_analyst.py 64  non-tech domain, 4 agents, "Case Study"
 ├── routers/                         research, context, persona, interview, feedback
 ├── tasks/research_tasks.py     60   Celery task wrappers + AGENT_TASK_MAP
 ├── tests/                   1,363   127 tests, fully mocked
@@ -150,5 +155,4 @@ Deliberate, with reasons. Do not "fix" these without discussing cost.
   this caps usage at ~41 interviews/month.
 - **ASCII sanitizer is blunt.** `encode('ascii', errors='replace')` in
   `persona_builder` destroys em-dashes and smart quotes in real content.
-- **`domains/finance/junior_analyst.py` is an empty stub.**
 - **Missing-token errors return 422, not 401.** FastAPI validation artifact.

@@ -69,20 +69,27 @@ no shared session store. It is the decision I would make again.
 
 ### Domains are configuration, not code
 
-Adding a sector means adding one file with four keys:
+Adding a sector means writing one file with four keys. Compare a tech domain
+against the finance one:
 
 ```python
-DOMAIN_CONFIG = {
-    "question_flow":    [("HR", 2), ("Behavioral", 2), ("Technical", 3), ("Coding", 1)],
-    "research_agents":  ["company", "glassdoor", "linkedin", "news", "tech", "neetcode"],
-    "persona_style":    "Technical and collaborative. Focuses on UI architecture...",
-    "scoring_rubric":   {"HR": [...], "Technical": [...]},
-}
+# domains/tech/frontend_developer.py
+"question_flow":   [("HR", 2), ("Behavioral", 2), ("Technical", 3), ("Coding", 1)],
+"research_agents": ["company", "glassdoor", "linkedin", "news", "tech", "neetcode"],
+
+# domains/finance/junior_analyst.py
+"question_flow":   [("HR", 2), ("Behavioral", 2), ("Technical", 2), ("Case Study", 2)],
+"research_agents": ["company", "glassdoor", "linkedin", "news"],
 ```
 
-The interview engine, persona builder and feedback agent never learn that a new
-domain exists. A law or finance domain would drop its own research agents and
-rubric in without touching an engine.
+The finance domain uses a category that exists nowhere in the codebase
+(`Case Study`), drops the two agents that search GitHub and LeetCode because
+they are meaningless for an analyst, and weights its questions differently.
+
+The interview engine, persona builder, feedback agent and orchestrator contain
+**zero references to any domain by name** — a grep for "finance" across every
+engine, router and schema returns nothing. A full finance interview is covered
+by a test that runs it through the unmodified engine.
 
 ### Celery + Redis was probably the wrong call
 

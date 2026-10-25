@@ -100,6 +100,67 @@ def test_every_config_names_real_research_agents(config):
     assert set(config["research_agents"]) <= known
 
 
+# ------------------------------------------------- התחום הלא-הייטקי
+
+# התחום הפיננסי הוא ההוכחה שהמערכת באמת domain-agnostic.
+# הטסטים כאן בודקים את ההבדלים המבניים שלו מתחומי ההייטק —
+# אם מישהו "יסדר" אותו כך שייראה כמוהם, ההוכחה תיעלם.
+
+@pytest.mark.parametrize("job_title", [
+    "Junior Financial Analyst",
+    "Finance Analyst",
+    "Investment Analyst",
+    "Equity Research Associate",
+])
+def test_finance_titles_reach_the_finance_domain(job_title):
+    assert domain_loader.load(job_title)["name"] == "Junior Financial Analyst"
+
+
+def test_finance_skips_the_hitech_only_agents():
+    """
+    tech מחפש GitHub ו-neetcode מחפש LeetCode — חסרי משמעות לאנליסט.
+    בחירת הסוכנים היא נתון ב-config, לא תנאי בקוד.
+    """
+    agents = set(domain_loader.load("Financial Analyst")["research_agents"])
+
+    assert "neetcode" not in agents
+    assert "tech" not in agents
+    assert agents == {"company", "glassdoor", "linkedin", "news"}
+
+
+def test_domains_may_run_different_numbers_of_agents():
+    """ארבעה סוכנים לפיננסים מול שישה להייטק — שניהם תקינים"""
+    finance = domain_loader.load("Financial Analyst")
+    tech    = domain_loader.load("Frontend Developer")
+
+    assert len(finance["research_agents"]) == 4
+    assert len(tech["research_agents"]) == 6
+
+
+def test_category_names_are_not_a_fixed_set():
+    """
+    "Case Study" לא קיים בשום תחום הייטק, ו-"Coding" לא קיים בפיננסים.
+    הקטגוריות הן מחרוזות חופשיות שזורמות לפרומפט ול-rubric —
+    אין enum קשיח במנוע שצריך לעדכן.
+    """
+    finance_categories = {c for c, _ in domain_loader.load("Financial Analyst")["question_flow"]}
+    tech_categories    = {c for c, _ in domain_loader.load("Frontend Developer")["question_flow"]}
+
+    assert "Case Study" in finance_categories
+    assert "Case Study" not in tech_categories
+    assert "Coding" in tech_categories
+    assert "Coding" not in finance_categories
+
+
+def test_question_weighting_differs_between_domains():
+    """פיננסים נותן שתי שאלות מקרה; הייטק נותן שאלת קידוד אחת"""
+    finance = dict(domain_loader.load("Financial Analyst")["question_flow"])
+    tech    = dict(domain_loader.load("Frontend Developer")["question_flow"])
+
+    assert finance["Case Study"] == 2
+    assert tech["Coding"] == 1
+
+
 # ------------------------------------------------- ה-validator עצמו
 
 def test_validator_rejects_a_config_with_missing_keys():

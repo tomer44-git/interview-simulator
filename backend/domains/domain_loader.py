@@ -3,6 +3,7 @@
 # להוסיף domain חדש: 1) צור קובץ config, 2) הוסף שורה ל-DOMAIN_MAP
 
 from domains.tech import frontend_developer, junior_ai_engineer
+from domains.finance import junior_analyst
 from domains import base_domain
 
 # ---- מיפוי job titles ל-configs ----
@@ -18,6 +19,13 @@ DOMAIN_MAP = [
     ("front end",         frontend_developer.DOMAIN_CONFIG),
     ("ui developer",      frontend_developer.DOMAIN_CONFIG),
     ("react developer",   frontend_developer.DOMAIN_CONFIG),
+
+    # פיננסים — תחום לא-הייטק. הוספתו דרשה קובץ config ושורות כאן
+    # בלבד; המנועים לא השתנו בכלל.
+    ("financial analyst", junior_analyst.DOMAIN_CONFIG),
+    ("finance analyst",   junior_analyst.DOMAIN_CONFIG),
+    ("investment analyst", junior_analyst.DOMAIN_CONFIG),
+    ("equity research",   junior_analyst.DOMAIN_CONFIG),
 ]
 
 # ברירת מחדל — אם לא נמצא התאמה
